@@ -50,7 +50,7 @@ install: install-stamp
 install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_clean
 	$(MAKE) install DESTDIR=$(TMP) PREFIX=/usr
 	rmdir --ignore-fail-on-non-empty --parents $(TMP)/usr/lib/perl5
 	touch install-stamp
