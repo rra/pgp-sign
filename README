@@ -1,0 +1,106 @@
+                          PGP::Sign version 0.09
+                (Create detached PGP signatures for data)
+
+  Copyright 1997 by Russ Allbery <rra@stanford.edu>.  All rights reserved.
+  This program is free software; you may redistribute it and/or modify it
+  under the same terms as Perl itself.
+
+
+INTRODUCTION
+
+  One important thing to clear up right away:
+
+                     THIS IS NOT A GENERAL PGP MODULE
+
+  For wonderful general PGP modules that will encrypt, decrypt, manage key
+  rings, slice, dice, fold, spindle, and mutilate your data, see the PGP
+  by-module directory at your local CPAN mirror.  This module sprung out
+  of a need to do one thing and one thing only, do it securely, and do it
+  well.  This module creates and checks detached signatures for data.
+  That's it.  If you want to do anything else that PGP lets you do, look
+  elsewhere.
+
+  The original purpose of this module was to factor out common code in a
+  News::Article class written by Andrew Gierth that did PGPMoose
+  signatures and signed control messages.  It should now be possible to
+  reimplement PGPMoose, signcontrol, and pgpverify using this module, and
+  the second and parts of the first have already been done.
+
+  So much for the "one thing only" part.  For the "do it securely" part,
+  this module uses a pipe and PGPPASSFD to pass the secret key password to
+  PGP, rather than a command line flag or an environment variable as seen
+  in other modules.  Both of those are subject to snooping by other users;
+  this approach isn't.
+
+  For the "do it well" part, the interface to this module takes every form
+  of data known to man.  Scalars and arrays are no problem, of course, but
+  if you give it a reference to an array, it'll walk the array to avoid
+  making a copy of a potentially large data structure.  You can also give
+  it an open file (in the form of a glob, a reference to a glob, a
+  FileHandle object, an IO::Handle object, or anything derived from
+  either) and it'll walk that too.  Or you can give it a reference to a
+  scalar if you really want to and it's cool with that.  Or, if you want
+  to get really exciting, you can give it a reference to a sub and it'll
+  call the sub repeatedly to get more data until the sub returns undef.
+  Perfect for walking some complex data structure you don't want to make
+  an internal copy of.  And if there's any other interesting data
+  structure you want to throw at it, tell me about it, and the next
+  version will probably support that too.
+
+  See the documentation for all the gory details, which really aren't that
+  gory.  At least yet.
+
+
+REQUIREMENTS
+
+  This module requires a version of PGP that supports PGPPASSFD.  2.6.2
+  does.  I can't personally vouch for any other version.  This module also
+  requires an operating system that's capable of coping with pipes,
+  forking, and passing file descriptors through an exec().  If your
+  operating system can't, that's considered by this module author to be a
+  bug in your operating system and not in this module.
+
+
+INSTALLATION
+
+  Edit Sign.pm and change the path to PGP right at the beginning (under
+  "Global variables") if necessary, and then follow the standard
+  installation procedure for Perl modules, which is to type the following
+  commands:
+
+        perl Makefile.PL
+        make
+        make install
+
+  You'll probably need to do the last as root.  There is no test suite yet
+  and probably won't be one since a test suite would require guaranteeing
+  the presence of some particular PGP key and pass phrase on your keyring
+  for testing purposes.  There's also no reason why you can't simply copy
+  the file Sign.pm into a subdirectory called PGP in your site_perl
+  directory, which is probably a considerably less anal approach than the
+  above but which robs you from enjoying the power and glory that *is*
+  ExtUtils::MakeMaker.
+
+
+THANKS
+
+  To Andrew Gierth <andrew@erlenstar.demon.co.uk> for the inspiration and
+  motivation to write this and the reminder that PGPPASSFD existed, and
+  also for being one of the two people who caught the mistake I made with
+  $? and open3().
+
+  To Jon Ribbens <jon@oaktree.co.uk> for pointing out that $? isn't
+  guaranteed to contain the exit status of something called from open3()
+  unless you do a waitpid() for it first.
+
+  To David Lawrence <tale@isc.org> and Greg Rose <ggr@usenix.org> for
+  signcontrol and PGPMoose respectively, the motivating applications.
+
+  To Phil Zimmermann, because Phil should be listed in the thank you list
+  for anything related to PGP, given that he wrote it and went through
+  legal hell to make sure we still had it available.
+
+
+Send any comments, bug reports, feature requests, flames, thank yous,
+offers of vast quantities of money, lutefisk, and large green Martian dogs
+named Ralf to rra@stanford.edu.  Enjoy!

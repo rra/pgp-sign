@@ -1,0 +1,8 @@
+\bRCS\b
+^MANIFEST\.
+^Makefile$
+~$
+\.old$
+\.bak$
+^\.
+/\.

@@ -1,0 +1,50 @@
+Sun Jul  5 03:31:57 1998  Russ Allbery  <eagle@windlord.Stanford.EDU>
+
+        * Sign.pm: PGP::Sign 0.9 released.
+
+        * Sign.pm: Fixed the way I was dealing with open3() file handles
+        and $?.  One needs to keep the PID and do an explicit waitpid(),
+        or the status you get may be something random.  Also cleaned
+        things up a little and explicitly set $/ in case our calling
+        program had it set to something odd.
+
+Mon Aug 18 07:18:09 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+
+        * Sign.pm: PGP::Sign 0.8 released.
+        
+        * Sign.pm (pgp_verify): Added a umask 077 (and restoration of
+        umask on completion) since we're creating temporary files.
+        (pgp_sign): Added a check to see if we got a signature at all.
+
+Fri Aug 15 02:37:34 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+
+        * Sign.pm: PGP::Sign 0.7 released.
+
+        * Sign.pm (pgp_verify): Changed to use O_EXCL when opening /tmp
+        files to avoid symlink attacks.
+        
+        * Sign.pm: PGP::Sign 0.6 released.
+
+        * Sign.pm: Added output() to munge trailing spaces if $MUNGE is
+        set, modified write_data() to send everything through output()
+        rather than printing it directly, added documentation of the new
+        behavior to the PODs.
+
+Tue Jul 29 02:26:39 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+
+        * Sign.pm: Removed $ORS, which was a hack that we don't need any
+        more.  That work should be done by the client, and the client is
+        capable of it.  Added a pgp_error() function (not exported by
+        default) to retrieve the error message, since that's a cleaner
+        user interface.  Changed the signature verification code to verify
+        detached signatures, which means we now use temporary files.
+        Added a $TMPDIR global variable to specify the directory in which
+        to create temporary files.  Changed the documentation to include
+        notes about all of this.
+
+Sun Jul 27 13:42:01 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+
+        * Sign.pm: Broke write_data() off into a separate function, added
+        pgp_verify() and tested it, changed the documentation to mention
+        it as well.  Fixed a few minor bugs, made to use @ERROR correctly,
+        added documentation.
