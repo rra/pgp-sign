@@ -10,4 +10,6 @@
 ^blib/
 ^PGP-Sign/
 ^PGP-Sign-.*\.tar\.gz$
+^data/randseed.bin$
+^paths$
 ^pm_to_blib$
