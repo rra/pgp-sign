@@ -45,7 +45,7 @@ use vars qw($VERSION @ERROR $ORS $PGP);
 
 # The path to PGP.  This should probably be set when the module is
 # installed.  The default is /usr/local/bin/pgp.
-$PGP = '/usr/pubsw/bin/pgp';
+$PGP = '/usr/local/bin/pgp';
 
 # It's possible that we may want to send pgp_sign lines that aren't newline
 # terminated but want the newlines to be added before the signature is
@@ -96,7 +96,7 @@ sub pgp_sign {
     pipe ($passfh, $writefh);
     print $writefh $passphrase;
     close $writefh;
-    $ENV{PGPPASSFD} = $passfh->fileno ();
+    local $ENV{PGPPASSFD} = $passfh->fileno ();
 
     # Fork off a pgp process that we're going to be feeding data to, and
     # tell it to just generate a signature using the given key id and pass
@@ -106,7 +106,10 @@ sub pgp_sign {
     my $errors = new FileHandle;
     my @command = ($PGP, '+batchmode', '-sabft', '-u', $keyid);
     eval { open3 ($pgp, $signature, $errors, @command) };
-    if ($@) { return ('Execution of pgp failed.') }
+    if ($@) {
+        @ERROR = ("Execution of pgp failed.\n");
+        return undef;
+    }
 
     # Set our output record separator if one has been requested.
     local $\ = $ORS if defined $ORS;
@@ -137,8 +140,7 @@ sub pgp_sign {
             print $pgp $source;
         } elsif (ref $source)  {
             if ($] > 5.003) {
-                if (UNIVERSAL::isa ($source, 'FileHandle')
-                    or UNIVERSAL::isa ($source, 'IO::Handle')) {
+                if (UNIVERSAL::isa ($source, 'IO::Handle')) {
                     local $_;
                     while (<$source>) { print $pgp $_ }
                 } else {
@@ -148,6 +150,8 @@ sub pgp_sign {
                 if (ref $source eq 'FileHandle') {
                     local $_;
                     while (<$source>) { print $pgp $_ }
+                } else {
+                    print $pgp $source;
                 }
             }
         } else {
@@ -159,14 +163,13 @@ sub pgp_sign {
     # If not, return the error output.
     close $pgp;
     if ($? != 0) {
-        @ERROR = <$errors>, "PGP returned exit status $?\n";
+        @ERROR = (<$errors>, "PGP returned exit status $?\n");
         return undef;
     }
     my @signature = <$signature>;
     close $signature;
     close $errors;
     close $passfh;
-    delete $ENV{PGPPASSFD};
 
     # Now, clean up the returned signature and return it, along with the
     # version number if desired.
@@ -182,4 +185,116 @@ sub pgp_sign {
     wantarray ? ($signature, $version) : $signature;
 }
 
+
+############################################################################
+# Module return value and documentation
+############################################################################
+
+# Make sure the module returns true.
 1;
+
+__DATA__
+
+=head1 NAME
+
+PGP::Sign - Create detached PGP signatures for data, securely
+
+=head1 SYNOPSIS
+
+    use PGP::Sign;
+    ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
+
+=head1 DESCRIPTION
+
+This module is designed to do one and only one thing securely and well;
+namely, generate detached PGP signatures for some arbitrary data.  It
+doesn't do encryption, it doesn't manage keyrings, it doesn't verify
+signatures, it just signs things.  This is ideal for applications like
+PGPMoose or control message generation that just need a fast signing
+mechanism.
+
+The interface is very simple; just call pgp_sign() with a key ID, a pass
+phrase, and some data.  The data can be specified in pretty much any form
+you can possibly consider data and a few you might not.  Scalars and
+arrays are passed along to PGP; references to arrays are walked and passed
+one element at a time (to avoid making a copy of the array); file handles,
+globs, or references to globs are read a line at a time and passed to PGP;
+and references to code are even supported (see below).  About the only
+thing that we don't handle are references to references (which are just
+printed to PGP, which probably isn't what you wanted) and hashes (which
+are treated like arrays, which doesn't make a lot of sense).
+
+If you give pgp_sign() a reference to a sub, it will repeatedly call that
+sub, sending the results to PGP to be signed, until the sub returns undef.
+What this lets you do is pass pgp_sign() an anonymous sub that walks your
+internal data and performs some manipulations on it a line at a time, thus
+allowing you to sign a slightly modified form of your data (with initial
+dashes escaped, for example) without having to use up memory to make an
+internal copy of it.
+
+In a scalar context, pgp_sign() returns the signature as an ASCII armored
+block with embedded newlines (but no trailing newline).  In a list
+context, it returns a two-element list consisting of the signature as
+above and the PGP version that signed it.  pgp_sign() will return undef in
+the event of any sort of error.
+
+There are three module variables you can set (yes, this is a slightly ugly
+interface, and it may be made cleaner in the future):
+
+=over 4
+
+=item $PGP::Sign::PGP
+
+The path to PGP.  This defaults to F</usr/local/bin/pgp>, but may have
+been fixed to point at the right place by the module installer during
+installation.
+
+=item $PGP::Sign::ORS
+
+Just like C<$\> or C<$ORS> under C<use English>, this is the output record
+separator (what's put between each data element you give pgp_sign(), each
+element of an array, and each line of a file handle as it's sent to PGP to
+be signed).  Depending on what you're doing, it may be convenient to set
+this to something like "\n", although in general you should probably avoid
+using this feature.
+
+=item @PGP::Sign::ERROR
+
+In the event of an error, this holds the output from PGP or some other
+informative error message.
+
+=back
+
+=head1 DIAGNOSTICS
+
+Mostly the contents of @PGP::Sign::ERROR is completely determined by PGP.
+The only thing that this module may stick in there is "Execution of PGP
+failed" if we couldn't fork off a PGP process and "PGP returned exit
+status %d" in the event of a non-zero exit status from PGP.
+
+=head1 CAVEATS
+
+This module uses a pipe and the environment variable PGPPASSFD to give the
+pass phrase to PGP, since this is the only secure method (both command
+line switches and environment variables can potentially be read by other
+users on the same machine using ps).  This requires a version of PGP that
+supports that feature, however.  I know for certain that PGP 2.6.2 does,
+but I can't be sure about other versions.
+
+This module forks, uses a pipe, and relies on the ability to pass an open
+pipe to an exec()ed subprocess.  This may cause portability problems to
+certain substandard operating systems.
+
+=head1 AUTHOR
+
+Russ Allbery <rra@stanford.edu>
+
+=head1 HISTORY
+
+Based heavily on work by Andrew Gierth <andrew@erlenstar.demon.co.uk>,
+this module came about in the process of implementing PGPMoose signatures
+and control message signatures for Usenet.  PGPMoose is the idea of Greg
+Rose <ggr@usenix.org>, and signcontrol and pgpverify are the idea of David
+Lawrence <tale@isc.org>.
+
+=cut
