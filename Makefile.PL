@@ -3,5 +3,5 @@
 use ExtUtils::MakeMaker;
 WriteMakefile (NAME         => 'PGP::Sign',
 	       DISTNAME     => 'PGP-Sign',
-               VERSION_FROM => 'PGP/Sign.pm',
+               VERSION_FROM => 'Sign.pm',
 	       dist         => { COMPRESS => 'gzip', SUFFIX => 'gz' });
