@@ -97,8 +97,8 @@ for ($PGPS, $PGPV, $PGPSTYLE) { s/\\/\\\\/g; s/\'/\\\'/g }
 
 # Now, open our input file and create our output file, and then do the
 # necessary substitutions.
-open (IN, 'PGP/Sign.in') or die "Cannot open PGP/Sign.in: $!\n";
-open (OUT, '> PGP/Sign.pm') or die "Cannot open PGP/Sign.pm: $!\n";
+open (IN, 'Sign.in') or die "Cannot open Sign.in: $!\n";
+open (OUT, '> Sign.pm') or die "Cannot open Sign.pm: $!\n";
 while (<IN>) {
     if (/^\# @@ VERSION$/)     { print OUT $version }
     elsif (/^\# @@ PGPS$/)     { print OUT "\$PGPS = '$PGPS';\n" }
