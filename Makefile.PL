@@ -2,33 +2,52 @@
 # $Id$
 use ExtUtils::MakeMaker;
 
-# This is ugly hack number one.  We want people to be able to specify the
-# path to PGP on the command line when they run perl Makefile.PL, so we hack
-# in a little bit of options processing to find and take the PGP setting.
-# We have to remove it from @ARGV before calling WriteMakefile, or MakeMaker
-# will complain about it.
-my $makepm = 'makepm.PL';
+# The build process for PGP::Sign normally will attempt to find programs to
+# use for signature generation and verification and will set PGPSTYLE based
+# on what programs are found.  We want to allow people to override that
+# earlier and without requiring interaction, though, so we allow four
+# additional command line options.  We have to pull them out of @ARGV before
+# handing things over to WriteMakefile(), since otherwise MakeMaker will
+# complain about them.
+#
+# PGP sets both PGPS and PGPV to the same value; PGPS and PGPV can also be
+# set seperately for separate signing and verification programs.
+my ($pgps, $pgpv, $pgpstyle);
 @ARGV = map {
-    if (/^PGP=(.*)/) {
-        $makepm .= ' ' . $1;
-        ();
-    } else {
-        $_;
-    }
+    if    (/^PGP=(.*)/)      { $pgps = $pgpv = $1; () }
+    elsif (/^PGPS=(.*)/)     { $pgps = $1;         () }
+    elsif (/^PGPV=(.*)/)     { $pgpv = $1;         () }
+    elsif (/^PGPSTYLE=(.*)/) { $pgpstyle = $1;     () }
+    else                     {                     $_ }
 } @ARGV;
+if ($pgps && !$pgpv) {
+    die "Must set PGPV if PGPS is set\n";
+} elsif ($pgpv && !$pgps) {
+    die "Must set PGPS if PGPV is set\n";
+}
 
-# This is ugly hack number two.  We need to pass the path to PGP along to
-# makepm.PL.  If we do, though, it also puts the path to PGP in the Makefile
-# dependencies line, which is rather annoying and not what we want.  So this
-# hack overrides the MakeMaker method that builds that line and strips off
-# the path to PGP.  This assumes that the second word after the :: of the
-# make rule is the path to PGP, which *appears* to be safe across all
-# platforms at least currently.
-sub MY::processPL {
-    package MY;
-    my $inherited = shift->SUPER::processPL (@_);
-    $inherited =~ s/ :: (\S+) (\S+)/ :: $1/;
-    $inherited;
+# If either PGP or PGPS and PGPV are set, and PGPSTYLE isn't, we try to
+# figure out PGPSTYLE from the program names.  We just base this on the name
+# of the executable used for signing, which should be reasonably reliable.
+# If this check fails, people can always set it themselves.
+if ($pgps && !$pgpstyle) {
+    if ($pgps =~ m%pgps[^/]*$%)   { $pgpstyle = 'PGP5' }
+    elsif ($pgps =~ m%gpg[^/]*$%) { $pgpstyle = 'GPG'  }
+    else                          { $pgpstyle = 'PGP2' }
+}
+
+# Paranoia.
+for ($pgps, $pgpv, $pgpstyle) { s/\\/\\\\/g; s/\'/\\\'/g }
+
+# If any of these are set, write out the results to paths for makepm.PL to
+# pick up.
+if ($pgps) {
+    open (PATHS, '> paths') or die "Can't create file 'paths': $!\n";
+    print PATHS "# Automatically generated PGP::Sign configuration\n";
+    print PATHS "\$PGPS = '$pgps';\n";
+    print PATHS "\$PGPV = '$pgpv';\n";
+    print PATHS "\$PGPSTYLE = '$pgpstyle';\n";
+    close PATHS;
 }
 
 # Now actually build the Makefile.
@@ -39,9 +58,9 @@ WriteMakefile (
      (ABSTRACT   => 'Create and check PGP signatures, securely',
       AUTHOR     => 'Russ Allbery (rra@stanford.edu)') : ()),
     MAN3PODS     => { 'PGP/Sign.pm' => '$(INST_MAN3DIR)/PGP::Sign.3' },
-    PL_FILES     => { $makepm => 'PGP/Sign.pm' },
+    PL_FILES     => { 'makepm.PL' => 'PGP/Sign.pm' },
     PM           => { 'PGP/Sign.pm' => '$(INST_LIBDIR)/Sign.pm' },
     VERSION_FROM => 'VERSION.pm',
     dist         => { COMPRESS => 'gzip', SUFFIX => 'gz' },
-    realclean    => { FILES => 'PGP/Sign.pm' }
+    realclean    => { FILES => 'PGP/Sign.pm data/randseed.bin paths' }
 );
