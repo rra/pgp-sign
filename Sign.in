@@ -1,0 +1,185 @@
+# PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
+# $Id$
+#
+# Copyright 1997 by Russ Allbery <rra@stanford.edu>
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the same terms as Perl itself.
+#
+#                     THIS IS NOT A GENERAL PGP MODULE
+#
+# For a general PGP module that handles encryption and decryption, key ring
+# management, and all of the other wonderful things you want to do with PGP,
+# see the PGP module directory on CPAN.  This module is designed to do one
+# and only one thing and do it fast, well, and securely -- create detached
+# signatures for some block of data.
+#
+# This above all: to thine own self be true,
+# And it must follow, as the night the day,
+# Thou canst not then be false to any man.
+#                               -- William Shakespeare, _Hamlet_
+
+############################################################################
+# Modules and declarations
+############################################################################
+
+package PGP::Sign;
+require 5.003;
+
+use Exporter ();
+use FileHandle ();
+use IPC::Open3 qw(open3);
+
+@ISA    = qw(Exporter);
+@EXPORT = qw(pgp_sign);
+
+use strict;
+use vars qw($VERSION @ERROR $ORS $PGP);
+
+($VERSION = (split (' ', q$Revision$ ))[1]) =~ s/\.(\d)$/.0$1/;
+
+
+############################################################################
+# Global variables
+############################################################################
+
+# The path to PGP.  This should probably be set when the module is
+# installed.  The default is /usr/local/bin/pgp.
+$PGP = '/usr/pubsw/bin/pgp';
+
+# It's possible that we may want to send pgp_sign lines that aren't newline
+# terminated but want the newlines to be added before the signature is
+# generated.  If we allow an output record separator to be set, that will
+# let us do that without a high memory cost for a join.  (We actually also
+# honor $\, but this is cleaner.  The default is undef.
+undef $ORS;
+
+# The text of any errors resulting from the last call to pgp_sign().
+@ERROR = ();
+
+
+############################################################################
+# Implementation
+############################################################################
+
+# Create a detached signature for the given data.  We try to be absolutely
+# as flexible as possible in how that data can be provided.  The first
+# argument should be a key id and the second argument the PGP passphrase,
+# and then all remaining arguments are considered to be part of the data to
+# be signed.  Scalars, references to arrays, references to FileHandle or
+# IO::Handle objects, file globs, references to code, and references to file
+# globs are all supported as ways to get the data, and at most one line at a
+# time is read (cutting down on memory usage).
+#
+# References to code are an interesting subcase.  A code reference is
+# executed repeatedly, whatever it returns being passed to PGP using the ORS
+# specified if any, until it returns undef.
+#
+# In a scalar context, the signature is returned as an ASCII-armored block
+# with embedded newlines.  In array context, a list consisting of the
+# signature and the PGP version number is returned.  Returns undef in the
+# event of an error, and the error text is then stored in @PGP::Sign::ERROR.
+sub pgp_sign {
+    my $keyid = shift;
+    my $passphrase = shift;
+
+    # Ignore SIGPIPE, since we're going to be talking to PGP.
+    local $SIG{PIPE} = 'IGNORE';
+
+    # We need to send the password to PGP, but we don't want to use either
+    # the command line or an environment variable, since both may expose us
+    # to snoopers on the system.  So we create a pipe, stick the password in
+    # it, and then pass the file descriptor for the password to PGP via an
+    # environment variable.
+    my $passfh = new FileHandle;
+    my $writefh = new FileHandle;
+    pipe ($passfh, $writefh);
+    print $writefh $passphrase;
+    close $writefh;
+    $ENV{PGPPASSFD} = $passfh->fileno ();
+
+    # Fork off a pgp process that we're going to be feeding data to, and
+    # tell it to just generate a signature using the given key id and pass
+    # phrase.
+    my $pgp = new FileHandle;
+    my $signature = new FileHandle;
+    my $errors = new FileHandle;
+    my @command = ($PGP, '+batchmode', '-sabft', '-u', $keyid);
+    eval { open3 ($pgp, $signature, $errors, @command) };
+    if ($@) { return ('Execution of pgp failed.') }
+
+    # Set our output record separator if one has been requested.
+    local $\ = $ORS if defined $ORS;
+
+    # Now, we deal with all of our possible sources of input, one at a time.
+    # We really want perl 5.004 here, since we want UNIVERSAL::isa().
+    # Unfortunately, we can't rely on 5.004 yet.  *But*, the main reason we
+    # want isa() is to handle the various derived IO::Handle classes, and
+    # 5.003 should only have FileHandle, so we can hack our way around that.
+    # We can't do anything interesting or particularly "cool" with
+    # references to references, so those we just print.  (Perl allows
+    # circular references, so we can't just dereference references to
+    # references until we get something interesting.)  Hashes are treated
+    # like arrays.
+    my $source;
+    for $source (@_) {
+        if (ref $source eq 'ARRAY' or ref $source eq 'HASH') {
+            for (@$source) { print $pgp $_ }
+        } elsif (ref $source eq 'GLOB' or ref \$source eq 'GLOB') {
+            local $_;
+            while (<$source>) { print $pgp $_ }
+        } elsif (ref $source eq 'SCALAR') {
+            print $pgp $$source;
+        } elsif (ref $source eq 'CODE') {
+            local $_;
+            while (defined ($_ = &$source ())) { print $pgp $_ }
+        } elsif (ref $source eq 'REF') {
+            print $pgp $source;
+        } elsif (ref $source)  {
+            if ($] > 5.003) {
+                if (UNIVERSAL::isa ($source, 'FileHandle')
+                    or UNIVERSAL::isa ($source, 'IO::Handle')) {
+                    local $_;
+                    while (<$source>) { print $pgp $_ }
+                } else {
+                    print $pgp $source;
+                }
+            } else {
+                if (ref $source eq 'FileHandle') {
+                    local $_;
+                    while (<$source>) { print $pgp $_ }
+                }
+            }
+        } else {
+            print $pgp $source;
+        }
+    }
+
+    # All done.  Close the pipe to PGP, clean up, and see if we succeeded.
+    # If not, return the error output.
+    close $pgp;
+    if ($? != 0) {
+        @ERROR = <$errors>, "PGP returned exit status $?\n";
+        return undef;
+    }
+    my @signature = <$signature>;
+    close $signature;
+    close $errors;
+    close $passfh;
+    delete $ENV{PGPPASSFD};
+
+    # Now, clean up the returned signature and return it, along with the
+    # version number if desired.
+    1 while ((shift @signature) !~ /-----BEGIN PGP .*-----/);
+    my $version;
+    while ($signature[0] ne "\n") {
+        ($version) = ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
+    }
+    shift @signature;
+    $#signature = $#signature - 1;
+    $signature = join ('', @signature);
+    chomp $signature;
+    wantarray ? ($signature, $version) : $signature;
+}
+
+1;
