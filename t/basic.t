@@ -1,12 +1,9 @@
+# basic.t -- Basic tests for PGP::Sign functionality.  -*- perl -*-
 # $Id$
-#
-# Test suite for the PGP::Sign Perl module.  Before make install is
-# performed, run tests with make test.  After make install, it should work
-# as perl test.pl.
 
 # Locate our test data directory for later use.
 my $data;
-for (qw(./data ./t/data ../t/data)) { $data = $_ if -d $_ }
+for (qw(./data ../data)) { $data = $_ if -d $_ }
 unless ($data) { die "Cannot find PGP data directory\n" }
 $PGP::Sign::PGPPATH = $data;
 
@@ -15,7 +12,7 @@ $PGP::Sign::PGPPATH = $data;
 open (DATA, "$data/message") or die "Cannot open $data/message: $!\n";
 @data = <DATA>;
 close DATA;
-    
+
 # The key ID and pass phrase to use for testing.
 my $keyid = 'testing';
 my $passphrase = 'testing';
@@ -91,7 +88,11 @@ if ($PGP::Sign::PGPSTYLE eq 'GPG') {
 }
 
 # 10 (take data from a code ref)
-my $munger = sub { local $_ = shift @munged; s/ +$//; $_ };
+my $munger = sub {
+    local $_ = shift @munged;
+    s/ +$// if defined;
+    $_
+};
 $signature = pgp_sign ($keyid, $passphrase, $munger);
 print 'not ' if PGP::Sign::pgp_error;
 print "ok 10\n";
@@ -116,6 +117,7 @@ if ($PGP::Sign::PGPSTYLE eq 'GPG') {
         @errors = PGP::Sign::pgp_error;
         if ($signer ne 'R. Russell Allbery <rra@stanford.edu>'
             || PGP::Sign::pgp_error) {
+            print "# Saw '$signer'\n";
             print 'not ';
         }
     } else {
@@ -136,6 +138,7 @@ if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
         @errors = PGP::Sign::pgp_error;
         if ($signer ne 'Russ Allbery <rra@stanford.edu>'
             || PGP::Sign::pgp_error) {
+            print "# Saw '$signer'\n";
             print 'not ';
         }
     } else {
@@ -160,6 +163,7 @@ if ($PGP::Sign::PGPSTYLE ne 'GPG') {
         }
         if ($signer ne 'Russ Allbery <rra@stanford.edu>'
             || PGP::Sign::pgp_error) {
+            print "# Saw '$signer'\n";
             print 'not ';
         }
     } else {
