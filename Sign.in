@@ -11,8 +11,8 @@
 # For a general PGP module that handles encryption and decryption, key ring
 # management, and all of the other wonderful things you want to do with PGP,
 # see the PGP module directory on CPAN.  This module is designed to do one
-# and only one thing and do it fast, well, and securely -- create detached
-# signatures for some block of data.
+# and only one thing and do it fast, well, and securely -- create and check
+# detached signatures for some block of data.
 #
 # This above all: to thine own self be true,
 # And it must follow, as the night the day,
@@ -31,7 +31,7 @@ use FileHandle ();
 use IPC::Open3 qw(open3);
 
 @ISA    = qw(Exporter);
-@EXPORT = qw(pgp_sign);
+@EXPORT = qw(pgp_sign pgp_verify);
 
 use strict;
 use vars qw($VERSION @ERROR $ORS $PGP);
@@ -62,18 +62,74 @@ undef $ORS;
 # Implementation
 ############################################################################
 
-# Create a detached signature for the given data.  We try to be absolutely
-# as flexible as possible in how that data can be provided.  The first
-# argument should be a key id and the second argument the PGP passphrase,
-# and then all remaining arguments are considered to be part of the data to
-# be signed.  Scalars, references to arrays, references to FileHandle or
-# IO::Handle objects, file globs, references to code, and references to file
-# globs are all supported as ways to get the data, and at most one line at a
-# time is read (cutting down on memory usage).
+# This is our generic "take this data and shove it" routine, used both for
+# signature generation and signature checking.  The first argument is the
+# file handle to shove all the data into, and the remaining arguments are
+# sources of data.  Scalars, references to arrays, references to FileHandle
+# or IO::Handle objects, file globs, references to code, and references to
+# file globs are all supported as ways to get the data, and at most one line
+# at a time is read (cutting down on memory usage).
 #
 # References to code are an interesting subcase.  A code reference is
 # executed repeatedly, whatever it returns being passed to PGP using the ORS
 # specified if any, until it returns undef.
+sub write_data {
+    my $fh = shift;
+
+    # Set our output record separator if one has been requested.
+    local $\ = $ORS if defined $ORS;
+
+    # Now, we deal with all of our possible sources of input, one at a time.
+    # We really want perl 5.004 here, since we want UNIVERSAL::isa().
+    # Unfortunately, we can't rely on 5.004 yet.  *But*, the main reason we
+    # want isa() is to handle the various derived IO::Handle classes, and
+    # 5.003 should only have FileHandle, so we can hack our way around that.
+    # We can't do anything interesting or particularly "cool" with
+    # references to references, so those we just print.  (Perl allows
+    # circular references, so we can't just dereference references to
+    # references until we get something interesting.)  Hashes are treated
+    # like arrays.
+    my $source;
+    for $source (@_) {
+        if (ref $source eq 'ARRAY' or ref $source eq 'HASH') {
+            for (@$source) { print $fh $_ }
+        } elsif (ref $source eq 'GLOB' or ref \$source eq 'GLOB') {
+            local $_;
+            while (<$source>) { print $fh $_ }
+        } elsif (ref $source eq 'SCALAR') {
+            print $fh $$source;
+        } elsif (ref $source eq 'CODE') {
+            local $_;
+            while (defined ($_ = &$source ())) { print $fh $_ }
+        } elsif (ref $source eq 'REF') {
+            print $fh $source;
+        } elsif (ref $source)  {
+            if ($] > 5.003) {
+                if (UNIVERSAL::isa ($source, 'IO::Handle')) {
+                    local $_;
+                    while (<$source>) { print $fh $_ }
+                } else {
+                    print $fh $source;
+                }
+            } else {
+                if (ref $source eq 'FileHandle') {
+                    local $_;
+                    while (<$source>) { print $fh $_ }
+                } else {
+                    print $fh $source;
+                }
+            }
+        } else {
+            print $fh $source;
+        }
+    }
+}
+
+
+# Create a detached signature for the given data.  The first argument should
+# be a key id and the second argument the PGP passphrase, and then all
+# remaining arguments are considered to be part of the data to be signed and
+# are handed off to write_data().
 #
 # In a scalar context, the signature is returned as an ASCII-armored block
 # with embedded newlines.  In array context, a list consisting of the
@@ -107,60 +163,16 @@ sub pgp_sign {
     my @command = ($PGP, '+batchmode', '-sabft', '-u', $keyid);
     eval { open3 ($pgp, $signature, $errors, @command) };
     if ($@) {
-        @ERROR = ("Execution of pgp failed.\n");
+        @ERROR = ($@, "Execution of pgp failed.\n");
         return undef;
     }
 
-    # Set our output record separator if one has been requested.
-    local $\ = $ORS if defined $ORS;
-
-    # Now, we deal with all of our possible sources of input, one at a time.
-    # We really want perl 5.004 here, since we want UNIVERSAL::isa().
-    # Unfortunately, we can't rely on 5.004 yet.  *But*, the main reason we
-    # want isa() is to handle the various derived IO::Handle classes, and
-    # 5.003 should only have FileHandle, so we can hack our way around that.
-    # We can't do anything interesting or particularly "cool" with
-    # references to references, so those we just print.  (Perl allows
-    # circular references, so we can't just dereference references to
-    # references until we get something interesting.)  Hashes are treated
-    # like arrays.
-    my $source;
-    for $source (@_) {
-        if (ref $source eq 'ARRAY' or ref $source eq 'HASH') {
-            for (@$source) { print $pgp $_ }
-        } elsif (ref $source eq 'GLOB' or ref \$source eq 'GLOB') {
-            local $_;
-            while (<$source>) { print $pgp $_ }
-        } elsif (ref $source eq 'SCALAR') {
-            print $pgp $$source;
-        } elsif (ref $source eq 'CODE') {
-            local $_;
-            while (defined ($_ = &$source ())) { print $pgp $_ }
-        } elsif (ref $source eq 'REF') {
-            print $pgp $source;
-        } elsif (ref $source)  {
-            if ($] > 5.003) {
-                if (UNIVERSAL::isa ($source, 'IO::Handle')) {
-                    local $_;
-                    while (<$source>) { print $pgp $_ }
-                } else {
-                    print $pgp $source;
-                }
-            } else {
-                if (ref $source eq 'FileHandle') {
-                    local $_;
-                    while (<$source>) { print $pgp $_ }
-                } else {
-                    print $pgp $source;
-                }
-            }
-        } else {
-            print $pgp $source;
-        }
-    }
+    # Send the rest of the arguments off to write_data().
+    unshift (@_, $pgp);
+    &write_data;
 
     # All done.  Close the pipe to PGP, clean up, and see if we succeeded.
-    # If not, return the error output.
+    # If not, save the error output and return undef.
     close $pgp;
     if ($? != 0) {
         @ERROR = (<$errors>, "PGP returned exit status $?\n");
@@ -182,7 +194,72 @@ sub pgp_sign {
     $#signature = $#signature - 1;
     $signature = join ('', @signature);
     chomp $signature;
+    undef @ERROR;
     wantarray ? ($signature, $version) : $signature;
+}
+
+# Check a detatched signature for given data.  Takes a signature block (in
+# the form of an ASCII-armored string with embedded newlines), a version
+# number (which may be undef), and some number of data sources that
+# write_data() can handle and returns the key id of the signature, the empty
+# string if the signature didn't check, and undef in the event of an error.
+# In the event of some sort of an error, we stick the error in @ERROR.
+sub pgp_verify {
+    my $signature = shift;
+    my $version = shift;
+    chomp $signature;
+
+    # Ignore SIGPIPE, since we're going to be talking to PGP.
+    local $SIG{PIPE} = 'IGNORE';
+
+    # Fork off a pgp process that we're going to be feeding data to, and
+    # tell it to just generate a signature using the given key id and pass
+    # phrase.
+    my $pgp = new FileHandle;
+    my $message = new FileHandle;
+    my $check = new FileHandle;
+    eval { open3 ($pgp, $message, $check, $PGP, '-f') };
+    if ($@) {
+        @ERROR = ($@, "Execution of pgp failed.\n");
+        return undef;
+    }
+
+    # Now, send PGP a structured message that looks like a normal PGP
+    # message.  It's going to spit the message back at us on $message and
+    # the status of the signature on $check.
+    print $pgp "-----BEGIN PGP SIGNED MESSAGE-----\n\n";
+    unshift (@_, $pgp);
+    &write_data;
+    print $pgp "\n-----BEGIN PGP SIGNATURE-----\n";
+    if (defined $version) { print $pgp "Version: $version\n\n" }
+    print $pgp $signature;
+    print $pgp "\n-----END PGP SIGNATURE-----\n";
+
+    # All done.  Close the pipe to PGP, clean up, and see if we succeeded.
+    # If not, save the error output and return undef.
+    close $pgp;
+    if ($? != 0) {
+        @ERROR = (<$check>, "PGP returned exit status $?\n");
+        return undef;
+    }
+
+    # We seem to have successfully run pgp.  Check for the message that
+    # gives us the key status and return the appropriate thing to our
+    # caller.
+    local $_;
+    my $signer;
+    while (<$check>) {
+        if (/^Good signature from user(?::\s+(.*)|\s+\"(.*)\"\.)\n$/) {
+            $signer = $+;
+            last;
+        } elsif (/^Bad signature /) {
+            last;
+        }
+    }
+    close $message;
+    close $check;
+    undef @ERROR;
+    $signer ? $signer : '';
 }
 
 
@@ -203,40 +280,47 @@ PGP::Sign - Create detached PGP signatures for data, securely
 
     use PGP::Sign;
     ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
+    $signer = pgp_verify ($signature, $version, @data);
 
 =head1 DESCRIPTION
 
 This module is designed to do one and only one thing securely and well;
-namely, generate detached PGP signatures for some arbitrary data.  It
-doesn't do encryption, it doesn't manage keyrings, it doesn't verify
+namely, generate and check detached PGP signatures for some arbitrary data.
+It doesn't do encryption, it doesn't manage keyrings, it doesn't verify
 signatures, it just signs things.  This is ideal for applications like
 PGPMoose or control message generation that just need a fast signing
 mechanism.
 
 The interface is very simple; just call pgp_sign() with a key ID, a pass
-phrase, and some data.  The data can be specified in pretty much any form
-you can possibly consider data and a few you might not.  Scalars and
-arrays are passed along to PGP; references to arrays are walked and passed
-one element at a time (to avoid making a copy of the array); file handles,
-globs, or references to globs are read a line at a time and passed to PGP;
-and references to code are even supported (see below).  About the only
-thing that we don't handle are references to references (which are just
-printed to PGP, which probably isn't what you wanted) and hashes (which
-are treated like arrays, which doesn't make a lot of sense).
+phrase, and some data, or call pgp_verify() with a signature (in the form
+generated by pgp_sign()), a version number (which can be undef if you don't
+want to give a version), and some data.  The data can be specified in pretty
+much any form you can possibly consider data and a few you might not.
+Scalars and arrays are passed along to PGP; references to arrays are walked
+and passed one element at a time (to avoid making a copy of the array); file
+handles, globs, or references to globs are read a line at a time and passed
+to PGP; and references to code are even supported (see below).  About the
+only thing that we don't handle are references to references (which are just
+printed to PGP, which probably isn't what you wanted) and hashes (which are
+treated like arrays, which doesn't make a lot of sense).
 
-If you give pgp_sign() a reference to a sub, it will repeatedly call that
-sub, sending the results to PGP to be signed, until the sub returns undef.
-What this lets you do is pass pgp_sign() an anonymous sub that walks your
-internal data and performs some manipulations on it a line at a time, thus
-allowing you to sign a slightly modified form of your data (with initial
-dashes escaped, for example) without having to use up memory to make an
-internal copy of it.
+If you give either function a reference to a sub, it will repeatedly call
+that sub, sending the results to PGP to be signed, until the sub returns
+undef.  What this lets you do is pass the function an anonymous sub that
+walks your internal data and performs some manipulations on it a line at a
+time, thus allowing you to sign a slightly modified form of your data
+(with initial dashes escaped, for example) without having to use up memory
+to make an internal copy of it.
 
 In a scalar context, pgp_sign() returns the signature as an ASCII armored
 block with embedded newlines (but no trailing newline).  In a list
 context, it returns a two-element list consisting of the signature as
 above and the PGP version that signed it.  pgp_sign() will return undef in
 the event of any sort of error.
+
+pgp_verify() returns the signer of the message in the case of a good
+signature, the empty string in the case of a bad signature, and undef in
+the event of some error.
 
 There are three module variables you can set (yes, this is a slightly ugly
 interface, and it may be made cleaner in the future):
@@ -252,9 +336,9 @@ installation.
 =item $PGP::Sign::ORS
 
 Just like C<$\> or C<$ORS> under C<use English>, this is the output record
-separator (what's put between each data element you give pgp_sign(), each
-element of an array, and each line of a file handle as it's sent to PGP to
-be signed).  Depending on what you're doing, it may be convenient to set
+separator (what's put between each data element, each element of an array,
+and each line of a file handle as it's sent to PGP to be signed or
+verified).  Depending on what you're doing, it may be convenient to set
 this to something like "\n", although in general you should probably avoid
 using this feature.
 
