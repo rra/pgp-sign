@@ -1,9 +1,9 @@
-                          PGP::Sign version 0.13
-                (Create detached PGP signatures for data)
+                          PGP::Sign version 0.14
+           (Create and verify detached PGP signatures for data)
 
-  Copyright 1997, 1998 by Russ Allbery <rra@stanford.edu>.  All rights
-  reserved.  This program is free software; you may redistribute it and/or
-  modify it under the same terms as Perl itself.
+  Copyright 1997-1999 by Russ Allbery <rra@stanford.edu>.  This program is
+  free software; you may redistribute it and/or modify it under the same
+  terms as Perl itself.
 
 
 INTRODUCTION
@@ -14,11 +14,14 @@ INTRODUCTION
 
   For wonderful general PGP modules that will encrypt, decrypt, manage key
   rings, slice, dice, fold, spindle, and mutilate your data, see the PGP
-  by-module directory at your local CPAN mirror.  This module sprung out
-  of a need to do one thing and one thing only, do it securely, and do it
-  well.  This module creates and checks detached signatures for data.
-  That's it.  If you want to do anything else that PGP lets you do, look
-  elsewhere.
+  by-module directory at your local CPAN mirror; hopefully there will be
+  one there.  This module sprung out of a need to do one thing and one
+  thing only, do it securely, and do it well.  This module creates and
+  checks detached signatures for data.  That's it.  If you want to do
+  anything else that PGP lets you do, look elsewhere.
+
+  Currently this module only works with text data.  Support for binary
+  data is high on the list of features I want to add.
 
   The original purpose of this module was to factor out common code in a
   News::Article class written by Andrew Gierth that did PGPMoose
@@ -27,10 +30,10 @@ INTRODUCTION
   the second and parts of the first have already been done.
 
   So much for the "one thing only" part.  For the "do it securely" part,
-  this module uses a pipe and PGPPASSFD to pass the secret key password to
-  PGP, rather than a command line flag or an environment variable as seen
-  in other modules.  Both of those are subject to snooping by other users;
-  this approach isn't.
+  this module uses a pipe to pass the secret key password to PGP, rather
+  than a command line flag or an environment variable as seen in other
+  modules.  Both of those are subject to snooping by other users; this
+  approach isn't.
 
   For the "do it well" part, the interface to this module takes every form
   of data known to man.  Scalars and arrays are no problem, of course, but
@@ -47,18 +50,43 @@ INTRODUCTION
   structure you want to throw at it, tell me about it, and the next
   version will probably support that too.
 
+  This module supports a wide variety of different versions of PGP, from
+  PGP 2.6.2 to PGP 5.0 to the new (and very nice) GnuPG.  Different
+  implementations of PGP are capable (and not capable) of creating and
+  checking various types of signatures; obviously, what this module can do
+  is limited by what versions of PGP you have installed.
+
   See the documentation for all the gory details, which really aren't that
   gory.  At least yet.
 
 
 REQUIREMENTS
 
-  This module requires a version of PGP that supports PGPPASSFD.  2.6.2
-  and 2.6.3i do.  I can't personally vouch for any other version.  This
-  module also requires an operating system that's capable of coping with
-  pipes, forking, and passing file descriptors through an exec().  If your
-  operating system can't, that's considered by this module author to be a
-  bug in your operating system and not in this module.
+  This module requires a version of PGP that supports PGPPASSFD or some
+  other mechanism for handing the passphrase over in a pipe.  2.6.2,
+  2.6.3i, 5.0, and GnuPG all do.  I can't personally vouch for any other
+  version, but I believe ViaCrypt PGP 4.0 may also work (since it's
+  largely based on 2.6.2).  This module also requires an operating system
+  that's capable of coping with pipes, forking, and passing file
+  descriptors through an exec().  If your operating system can't, that's
+  considered by this module author to be a bug in your operating system
+  and not in this module.
+
+  I've personally tested or received reports of clean tests of this module
+  with the following versions of PGP:
+
+        PGP 2.6.2 (US version)
+        PGP 2.6.2i
+        PGP 5.0 (US Linux freeware version)
+        GnuPG 0.9.2 (Linux and Solaris)
+
+  If you successfully use this module with other versions of PGP not
+  listed above, please let me know.
+
+  This module requires no other modules besides IPC::Open3 and FileHandle,
+  both of which are part of Perl core and have been for some time.  It
+  should work with Perl 5.003 or later, although I personally have only
+  tested it with Perl 5.004_04 and 5.005_02.
 
 
 INSTALLATION
@@ -71,21 +99,79 @@ INSTALLATION
         make test
         make install
 
-  You'll probably need to do the last as root.  When you run make, you
-  will be prompted for the path to PGP; make sure this is correct, since
-  this will be coded into the module when it's installed.
+  You'll probably need to do the last as root unless you're installing in
+  your own private modules directory.
+
+  When you run make, you will be prompted for the path to the program to
+  create signatures and the program to verify signatures.  PGP::Sign will
+  try to guess at what you may want to use, preferring GnuPG and then PGP
+  5.0.  For GnuPG or PGP 2.6, both paths should point to the same program;
+  for PGP 5.0, pgps is the program that generates signatures and pgpv is
+  the program that verifies them.  Don't set the signing program and the
+  verifying program to mutually incompatible things, or you'll get strange
+  results.
+
+  You will also be prompted for what PGP style to default to, since each
+  PGP implementation works slightly differently.  This has to be one of
+  the following:  "PGP2" for PGP 2.6 workalikes, "PGP5" for PGP 5.0 and
+  workalikes, or "GPG" for GnuPG.  Again, PGP::Sigh will try to guess from
+  the name of the binaries you chose.
+
+  If you have multiple versions of PGP installed on your system, you still
+  have to pick one to be the default.  You'll be able to switch between
+  PGP programs and PGP styles at runtime; see the PGP::Sign documentation
+  for details.
 
   If you want to avoid the prompt for the path to PGP, you can, instead of
   the first line, type:
 
         perl Makefile.PL PGP=/path/to/pgp
 
-  and then /path/to/pgp will be used as the path to PGP and you won't be
-  prompted.
+  and then /path/to/pgp will be used as the path to PGP (both signing and
+  verification) and you won't be prompted.  When invoked this way,
+  Makefile.PL will attempt to figure out what PGP style you're using from
+  the name of the binaries.  You can set it specifically with something
+  like:
+
+        perl Makefile.PL PGP=/usr/local/bin/gpg PGPSTYLE=GPG
+
+  if you need to.  If the signing program and verifying program are
+  different, set PGPS and PGPV instead of just PGP.  For example:
+
+        perl Makefile.PL PGPS=/usr/local/bin/pgps PGPV=/usr/local/bin/pgpv
+
+  If you want to install PGP::Sign in somewhere other than the default
+  installation location, you can set PREFIX or LIB on the Makefile.PL
+  command line.  See the ExtUtils::MakeMaker documentation for more
+  details.
+
+
+TESTING
 
   There is a small test suite that uses the files in data to make sure
-  that signing and checking of signatures work.  More test cases are
-  welcome, particularly if you find a bug.
+  that signing and checking of signatures work.  This test suite uses the
+  key rings and data in the data subdirectory of the distribution, and
+  should work correctly under any of the supported versions of PGP.
+
+  To run the test suite, type:
+
+        make test
+
+  after running make.  Regardless of your PGP style, at least one test
+  will be skipped, since PGP::Sign knows how to test RSA signatures (PGP
+  2.6 and PGP 5.0), DSS version three signatures (PGP 5.0 and GnuPG), and
+  DSS version four signatures (GnuPG only), and no one PGP implementation
+  can handle all three (unless your GnuPG installation includes RSA
+  support).
+
+  Note that different PGP implementations return different things and
+  therefore the test suite looks for different things depending on what
+  your PGP style is set to.  See the PGP::Sign documentation for an
+  extended discussion of issues related to trailing whitespace, and see
+  the comments in test.pl for information on exactly what's being tested.
+
+  More tests are welcome, particularly if you find a bug or if they test
+  some major functionality of this module not currently covered.
 
 
 THANKS
@@ -103,6 +189,11 @@ THANKS
   and adding a test suite and code in Makefile.PL to search for an
   installed version of PGP.
 
+  To Todd Underwood <todd@nm.net> for the impetus to get this module
+  working under GnuPG and PGP 5.0, and to him and Monte Mitzelfelt
+  <monte@nm.net> for the initial GnuPG implementation that I based mine
+  on.
+
   To David Lawrence <tale@isc.org> and Greg Rose <ggr@usenix.org> for
   signcontrol and PGPMoose respectively, the motivating applications.
 
@@ -110,7 +201,34 @@ THANKS
   for anything related to PGP, given that he wrote it and went through
   legal hell to make sure we still had it available.
 
+  To Werner Koch <werner.koch@guug.de> for GnuPG, which is much nicer than
+  any other PGP implementation I've worked with and is free to boot, and
+  for pointing me at the right sections of RFC 2440 to explain the OpenPGP
+  standard on whitespace munging in text signatures.
 
-Send any comments, bug reports, feature requests, flames, thank yous,
-offers of vast quantities of money, lutefisk, and large green Martian dogs
-named Ralf to rra@stanford.edu.  Enjoy!
+
+CONTACTING ME AND CONTRIBUTIONS
+
+  Send any comments, bug reports, feature requests, flames, thank yous,
+  offers of vast quantities of money, lutefisk, and large green Martian
+  dogs named Ralf to rra@stanford.edu.  :)
+
+  Please allow at least a month for me to respond to mail regarding this
+  module.  I get at *least* 500 mail messages a day, and I'm afraid this
+  module is something that I only get a chance to work on once every few
+  months.  I do intend to continue to maintain it, however, and I will get
+  back to you eventually.
+
+  Contributions are welcome!  I will not have enough time to add
+  everything I want to add to this module, but I tend to be sparked into
+  bursts of creativity and programming energy when sent new ideas or
+  patches, even partial ones.  If you're interested in contributing,
+  please read TODO first.
+
+  Enjoy!
+
+-- 
+Russ Allbery <rra@stanford.edu>         <URL:http://www.eyrie.org/~eagle/>
+
+       [  RSA: 32 D7 46 5A D7 BA 0E 5C  5B F0 8A 27 3D B4 30 E3  ]
+       [ DSS: 18CF B0C8 368A 36A8 86F5  66A2 F985 E340 0AFC 7476 ]
