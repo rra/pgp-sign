@@ -4,6 +4,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile (
     NAME         => 'PGP::Sign',
     DISTNAME     => 'PGP-Sign',
+    ($] >= 5.005 ?
+     (ABSTRACT   => 'Create and check PGP signatures, securely',
+      AUTHOR     => 'Russ Allbery (rra@stanford.edu)'
+     ) : ()),
     PL_FILES     => { 'makepm.PL' => 'PGP/Sign.pm' },
     PM           => { 'PGP/Sign.pm' => '$(INST_LIBDIR)/Sign.pm' },
     VERSION_FROM => 'VERSION.pm',
