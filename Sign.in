@@ -27,6 +27,7 @@ package PGP::Sign;
 require 5.003;
 
 use Exporter ();
+use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
 use FileHandle ();
 use IPC::Open3 qw(open3);
 
@@ -237,7 +238,7 @@ sub pgp_verify {
     # our lives much easier.  It would be nice to do this without having to
     # use temporary files.  Maybe with PGP 5.0.
     my $filename = $TMPDIR . '/pgp' . time . '.' . $$;
-    my $sigfile = new FileHandle ">$filename.asc";
+    my $sigfile = new FileHandle "$filename.asc", O_WRONLY|O_EXCL|O_CREAT;
     unless ($sigfile) {
         @ERROR = ("Unable to open temp file $filename.asc: $!\n");
         return undef;
@@ -247,7 +248,7 @@ sub pgp_verify {
     print $sigfile $signature;
     print $sigfile "\n-----END PGP MESSAGE-----\n";
     close $sigfile;
-    my $datafile = new FileHandle ">$filename";
+    my $datafile = new FileHandle "$filename", O_WRONLY|O_EXCL|O_CREAT;
     unless ($datafile) {
         unlink "$filename.asc";
         @ERROR = ("Unable to open temp file $filename: $!\n");
