@@ -1,3 +1,12 @@
+2002-06-28  Russ Allbery  <rra@stanford.edu>
+
+	* VERSION.pm: PGP::Sign 0.17 released.
+
+	* Sign.in: Update CAVEATS to be slightly less optimistic about the
+	chances of a major overhaul.  Add a URL for RFC 2440 and this
+	module's web site.  Add a COPYRIGHT AND LICENSE section.  Update
+	the markup in the documentation.
+
 2000-10-08  Russ Allbery  <rra@stanford.edu>
 
 	* test.pl: Skip test 9 completely under GnuPG, as the whitespace
