@@ -1,8 +1,8 @@
 ChangeLog
 MANIFEST
 Makefile.PL
-PGP/Sign.in
 README
+Sign.in
 TODO
 VERSION.pm
 data/message

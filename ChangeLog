@@ -1,3 +1,20 @@
+Sun Jun 13 12:37:00 1999  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.15 released.
+
+        * README: Added a thank you to Lupe Christoph for the fcntl()
+        stuff, fixed a typo, updated for 0.15.
+
+        * Sign.in: Added a call to fcntl() to clear close-on-exec on the
+        passphrase pipe in pgp_sign(), needed for Perl 5.005_03.  Added a
+        note to the documentation that PGP may want to write randseed.bin
+        in its key ring directory.
+
+        * Makefile.PL: Sign.in and Sign.pm moved to the root directory,
+        updated ABSTRACT.
+
+        * makepm.PL: Sign.in and Sign.pm moved to the root directory.
+
 Wed Feb 10 00:35:14 1999  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * VERSION.pm: PGP::Sign 0.14 released.
