@@ -1,3 +1,71 @@
+Wed Feb 10 00:35:14 1999  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.14 released.
+
+        * PGP/Sign.in: Use long options with GnuPG rather than -bat, add
+        --force-v3-sigs so that generated signatures will be compatible
+        with PGP 5.0, and added documentation of this.
+
+        * TODO: New file.
+
+        * README: Added a note that binary data isn't supported yet,
+        greatly expanded the REQUIREMENTS section now that we support a
+        wide variety of PGP implementations, added notes about required
+        Perl versions, expanded the INSTALLATION section to cover the
+        various options to Makefile.PL and the various things the
+        installer is prompted for, broke TESTING out into a separate
+        section with notes about the skipped tests, added thank yous for
+        Todd Underwood, Monte Mitzelfelt, and Werner Koch, and expanded
+        the CONTACTING section.
+
+        * makepm.PL: Search for gpg and pgps as well, set both PGPS and
+        PGPV with prompts and guesses for each, prompt for and set
+        PGPSTYLE, and pick up overrides to avoid interactivity from a file
+        rather than from the command line.
+
+        * Makefile.PL: Added support for PGPS, PGPV, and PGPSTYLE settings
+        on the command line, changed to guess a few things if not
+        specified and to pass values to makepm.PL via a separate file
+        rather than the command line.  Ugly hack to fix Makefile
+        dependencies removed, since it's no longer necessary.
+
+Tue Feb  9 19:47:58 1999  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * test.pl: Changed the testing key ID to "testing", added special
+        casing on PGPSTYLE for testing signatures of whitespace-munged
+        data against unmunged data since GnuPG will still consider the
+        signature valid, added two new tests for version 3 and version 4
+        DSS signatures, and had GnuPG skip the PGP 2.6.2 RSA signature
+        check.
+
+        * PGP/Sign.in: Added support for GnuPG and PGP 5.0.  This involves
+        a new PGPSTYLE global variable, support for separate programs for
+        signing and verification, and lots of choosing between styles all
+        over the code.  The documentation has also been updated to reflect
+        this support, including a long note about whitespace munging
+        incompatibilities between different versions and warnings about
+        potential future API changes for this module.  Also added a SEE
+        ALSO section and a thank you to the folks who send in GnuPG
+        support originally.
+
+        * data/message.asc.v4: New file.  Version 4 DSS signature.
+
+        * data/message.asc: New file.  Version 3 DSS signature.
+
+        * data/pubring.gpg: New file.  GnuPG key ring for testing.
+        data/secring.gpg: New file.
+        data/trustdb.gpg: New file.
+
+        * data/pubring.pkr: New file.  PGP 5.0 key ring for testing.
+        data/secring.pkr: New file.
+
+        * data/message.sig: Renamed from message.asc; this is the PGP
+        2.6.2 RSA signature.
+
+        * data/pubring.pgp: Change key ID of test key to testing, since
+        GPG requires at least five characters in the key ID.
+        data/secring.pgp: Likewise.
+
 Fri Dec  4 20:49:16 1998  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * VERSION.pm: PGP::Sign 0.13 released.

@@ -6,7 +6,14 @@ README
 VERSION.pm
 data/message
 data/message.asc
+data/message.asc.v4
+data/message.sig
+data/pubring.gpg
 data/pubring.pgp
+data/pubring.pkr
+data/secring.gpg
 data/secring.pgp
+data/secring.skr
+data/trustdb.gpg
 makepm.PL
 test.pl
