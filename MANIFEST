@@ -18,6 +18,7 @@ debian/rules
 Makefile.PL
 makepm.PL
 MANIFEST			This list of files
+META.yml                        Module meta-data (added by MakeMaker)
 README
 Sign.in
 test.pl
