@@ -75,6 +75,14 @@ INSTALLATION
   will be prompted for the path to PGP; make sure this is correct, since
   this will be coded into the module when it's installed.
 
+  If you want to avoid the prompt for the path to PGP, you can, instead of
+  the first line, type:
+
+        perl Makefile.PL PGP=/path/to/pgp
+
+  and then /path/to/pgp will be used as the path to PGP and you won't be
+  prompted.
+
   There is a small test suite that uses the files in data to make sure
   that signing and checking of signatures work.  More test cases are
   welcome, particularly if you find a bug.
