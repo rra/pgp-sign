@@ -1,5 +1,12 @@
 ChangeLog
 MANIFEST
 Makefile.PL
+PGP/Sign.in
 README
-Sign.pm
+VERSION.pm
+data/message
+data/message.asc
+data/pubring.pgp
+data/secring.pgp
+makepm.PL
+test.pl

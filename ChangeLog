@@ -1,3 +1,44 @@
+Thu Nov 26 03:53:56 1998  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.10 released.
+
+        * PGP/Sign.in: Modified to be PGP/Sign.in instead of Sign.pm,
+        added special markers for the path to PGP and the version number,
+        added support for $PGPPATH, fixed a bug in finding the PGP version
+        number of a signature, cleaned up and reformatted the
+        documentation, added a note about PGP environment variables, added
+        bugs concerning our lack of support for PGP v5 and GPG, added a
+        thank you to Andrew Ford in the history section of the
+        documentation.
+
+        * README: Added a thank you to Andrew Ford and documentation of
+        how to run our new test suite.  That plus the new auto-generation
+        of Sign.pm means I had to snip the great paragraph about
+        ExtUtils::MakeMaker; ah well, I'll use it somewhere else.
+
+        * Makefile.PL: Run makepm.PL to generate PGP/Sign.pm, tell
+        MakeMaker where the actual module is, and get our version number
+        from VERSION.pm now.
+
+        * makepm.PL: New file.  Now generate PGP/Sign.pm automatically
+        from this file, which finds and prompts for the path to PGP and
+        grabs the version from VERSION.pm.
+
+        * VERSION.pm: New file.  We now pull our release version number
+        from here rather than the CVS revision of Sign.in.
+
+        * test.pl: New file.  Added a reasonably good test suite that
+        works with public and private key rings included with the
+        distribution.  Based on work by Andrew Ford.
+
+        * data/message: New file.
+
+        * data/message.asc: New file.
+
+        * data/pubring.pgp: New file.
+
+        * data/secring.pgp: New file.
+
 Sun Jul  5 03:31:57 1998  Russ Allbery  <eagle@windlord.Stanford.EDU>
 
         * Sign.pm: PGP::Sign 0.9 released.
