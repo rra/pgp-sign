@@ -6,6 +6,7 @@
 ^Sign\.pm$
 ^blib/
 ^data/randseed.bin$
+^data/trustdb.gpg$'
 ^paths$
 ^pm_to_blib$
 ~$

@@ -57,7 +57,8 @@ if ($pgps) {
 my @clean = map { 'data/' . $_ } qw(PGPMacBinaryMappings.txt PGPgroup.pgr
                                     PGPsdkPreferences pgp.cfg random_seed
                                     randseed.bin randseed.rnd
-                                    pubring-bak-1.pkr secring-bak-1.skr);
+                                    pubring-bak-1.pkr secring-bak-1.skr
+                                    trustdb.gpg);
 
 # Now actually build the Makefile.
 WriteMakefile (
