@@ -1,4 +1,4 @@
-\bRCS\b
+\bCVS\b
 ^MANIFEST\.
 ^Makefile$
 ~$
@@ -6,3 +6,8 @@
 \.bak$
 ^\.
 /\.
+^PGP/Sign\.pm$
+^blib/
+^PGP-Sign/
+^PGP-Sign-.*\.tar\.gz$
+^pm_to_blib$
