@@ -1,3 +1,5 @@
+# $Id$
+#
 # Test suite for the PGP::Sign Perl module.  Before make install is
 # performed, run tests with make test.  After make install, it should work
 # as perl test.pl.
@@ -76,15 +78,11 @@ print 'not ' if ($signer ne 'testing' || PGP::Sign::pgp_error);
 print "ok 8\n";
 
 # 9 (check signature of munged data against unmunged data w/o MUNGE)
-# This signature is expected to verify with GnuPG (which follows RFC 2440)
-# and not verify with PGP v2 or PGP v5, which don't.  See the notes in the
-# PGP::Sign documentation.
+# This signature is expected to not verify (it used to verify with older
+# versions of GnuPG but GnuPG was then modified to follow PGP in whitespace
+# handling). 
 $signer = pgp_verify ($signature, $version, @munged);
-if ($PGP::Sign::PGPSTYLE eq 'GPG') {
-    print 'not ' if ($signer ne 'testing' || PGP::Sign::pgp_error);
-} else {    
-    print 'not ' if ($signer ne '' || PGP::Sign::pgp_error);
-}
+print 'not ' if ($signer ne '' || PGP::Sign::pgp_error);
 print "ok 9\n";
 
 # 10 (take data from a code ref)
