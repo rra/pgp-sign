@@ -204,7 +204,12 @@ sub pgp_sign {
 
     # Now, clean up the returned signature and return it, along with the
     # version number if desired.
-    1 while ((shift @signature) ne "-----BEGIN PGP MESSAGE-----\n");
+    while ((shift @signature) ne "-----BEGIN PGP MESSAGE-----\n") {
+        if (not @signature) {
+            @ERROR = ("No signature from PGP (command not found?)\n");
+            return undef;
+        }
+    }
     my $version;
     while ($signature[0] ne "\n") {
         ($version) = ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
@@ -237,6 +242,7 @@ sub pgp_verify {
     # signature, though, we don't have to do any data mangling, which makes
     # our lives much easier.  It would be nice to do this without having to
     # use temporary files.  Maybe with PGP 5.0.
+    my $umask = umask 077;
     my $filename = $TMPDIR . '/pgp' . time . '.' . $$;
     my $sigfile = new FileHandle "$filename.asc", O_WRONLY|O_EXCL|O_CREAT;
     unless ($sigfile) {
@@ -285,6 +291,7 @@ sub pgp_verify {
     close $pgp;
     undef @ERROR;
     unlink $filename, "$filename.asc";
+    umask $umask;
     $signer ? $signer : '';
 }
 
