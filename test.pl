@@ -1,6 +1,6 @@
-# Test suite for the PGP::Sign Perl module.  Before 'make install' is
-# performed, this script should be runnable with 'make test'.  After 'make
-# install', it should work as 'perl test.pl'.
+# Test suite for the PGP::Sign Perl module.  Before make install is
+# performed, run tests with make test.  After make install, it should work
+# as perl test.pl.
 
 # Locate our test data directory for later use.
 my $data;
@@ -15,32 +15,39 @@ open (DATA, "$data/message") or die "Cannot open $data/message: $!\n";
 close DATA;
     
 # The key ID and pass phrase to use for testing.
-my $keyid = 'test';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Print out the count of tests we'll be running.
-BEGIN { $| = 1; print "1..12\n" }
+BEGIN { $| = 1; print "1..14\n" }
 
 # 1 (ensure module can load)
-END   { print "not ok 1\n" unless $loaded }
+END { print "not ok 1\n" unless $loaded }
 use PGP::Sign;
+use FileHandle;
 $loaded = 1;
 print "ok 1\n";
 
 # 2 (generate signature)
 my ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
-print 'not ' if PGP::Sign::pgp_error;
+my @errors = PGP::Sign::pgp_error;
+print 'not ' if @errors;
 print "ok 2\n";
+warn @errors if @errors;
 
 # 3 (check signature)
 my $signer = pgp_verify ($signature, $version, @data);
-print 'not ' if ($signer ne 'test' || PGP::Sign::pgp_error);
+@errors = PGP::Sign::pgp_error;
+print 'not ' if ($signer ne 'testing' || @errors);
 print "ok 3\n";
+warn @errors if @errors;
 
 # 4 (check signature w/o version, which shouldn't matter)
 $signer = pgp_verify ($signature, undef, @data);
-print 'not ' if ($signer ne 'test' || PGP::Sign::pgp_error);
+@errors = PGP::Sign::pgp_error;
+print 'not ' if ($signer ne 'testing' || @errors);
 print "ok 4\n";
+warn @errors if @errors;
 
 # 5 (check failed signature)
 $signer = pgp_verify ($signature, $version, @data, "xyzzy");
@@ -58,19 +65,26 @@ print "ok 6\n";
 
 # 7 (check a signature of munged data against the munged version)
 $signer = pgp_verify ($signature, $version, @data);
-print 'not ' if ($signer ne 'test' || PGP::Sign::pgp_error);
+print 'not ' if ($signer ne 'testing' || PGP::Sign::pgp_error);
 print "ok 7\n";
 
 # 8 (check signature of munged data against unmunged data with MUNGE)
 $PGP::Sign::MUNGE = 1;
 $signer = pgp_verify ($signature, $version, @munged);
 $PGP::Sign::MUNGE = 0;
-print 'not ' if ($signer ne 'test' || PGP::Sign::pgp_error);
+print 'not ' if ($signer ne 'testing' || PGP::Sign::pgp_error);
 print "ok 8\n";
 
 # 9 (check signature of munged data against unmunged data w/o MUNGE)
+# This signature is expected to verify with GnuPG (which follows RFC 2440)
+# and not verify with PGP v2 or PGP v5, which don't.  See the notes in the
+# PGP::Sign documentation.
 $signer = pgp_verify ($signature, $version, @munged);
-print 'not ' if ($signer ne '' || PGP::Sign::pgp_error);
+if ($PGP::Sign::PGPSTYLE eq 'GPG') {
+    print 'not ' if ($signer ne 'testing' || PGP::Sign::pgp_error);
+} else {    
+    print 'not ' if ($signer ne '' || PGP::Sign::pgp_error);
+}
 print "ok 9\n";
 
 # 10 (take data from a code ref)
@@ -81,23 +95,72 @@ print "ok 10\n";
 
 # 11 (check the resulting signature)
 $signer = pgp_verify ($signature, undef, @data);
-my @errors = PGP::Sign::pgp_error;
-print 'not ' if ($signer ne 'test' || @errors);
-warn @errors if @errors;
+@errors = PGP::Sign::pgp_error;
+print 'not ' if ($signer ne 'testing' || @errors);
 print "ok 11\n";
+warn @errors if @errors;
 
-# 12 (check an external signature)
-if (open (SIG, "$data/message.asc") && open (DATA, "$data/message")) {
-    my @signature = <SIG>;
-    close SIG;
-    $signature = join ('', @signature[3..6]);
-    $signer = pgp_verify ($signature, undef, \*DATA);
-    @errors = PGP::Sign::pgp_error;
-    if ($signer ne 'R. Russell Allbery <rra@stanford.edu>'
-        || PGP::Sign::pgp_error) {
+# 12 (check an external PGP 2.6.2 signature, data from glob ref)
+if ($PGP::Sign::PGPSTYLE eq 'GPG') {
+    print "ok 12 # skip\n";
+} else {
+    if (open (SIG, "$data/message.sig") && open (DATA, "$data/message")) {
+        my @signature = <SIG>;
+        close SIG;
+        $signature = join ('', @signature[3..6]);
+        $signer = pgp_verify ($signature, undef, \*DATA);
+        close DATA;
+        @errors = PGP::Sign::pgp_error;
+        if ($signer ne 'R. Russell Allbery <rra@stanford.edu>'
+            || PGP::Sign::pgp_error) {
+            print 'not ';
+        }
+    } else {
         print 'not ';
     }
-} else {
-    print 'not ';
+    print "ok 12\n";
 }
-print "ok 12\n";
+
+# 13 (check an external version three DSA signature, data from array ref)
+if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
+    print "ok 13 # skip\n";
+} else {
+    if (open (SIG, "$data/message.asc")) {
+        my @signature = <SIG>;
+        close SIG;
+        $signature = join ('', @signature[4..6]);
+        $signer = pgp_verify ($signature, undef, \@data);
+        @errors = PGP::Sign::pgp_error;
+        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
+            || PGP::Sign::pgp_error) {
+            print 'not ';
+        }
+    } else {
+        print 'not ';
+    }
+    print "ok 13\n";
+}
+
+# 14 (check an external version four DSA signature, data from FileHandle)
+if ($PGP::Sign::PGPSTYLE ne 'GPG') {
+    print "ok 14 # skip\n";
+} else {
+    if (open (SIG, "$data/message.asc.v4")) {
+        my @signature = <SIG>;
+        close SIG;
+        my $fh = new FileHandle ("$data/message");
+        my $signer;
+        if ($fh) {
+            $signature = join ('', @signature[4..6]);
+            $signer = pgp_verify ($signature, undef, $fh);
+            @errors = PGP::Sign::pgp_error;
+        }
+        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
+            || PGP::Sign::pgp_error) {
+            print 'not ';
+        }
+    } else {
+        print 'not ';
+    }
+    print "ok 14\n";
+}
