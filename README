@@ -1,4 +1,4 @@
-                          PGP::Sign version 0.14
+                          PGP::Sign version 0.15
            (Create and verify detached PGP signatures for data)
 
   Copyright 1997-1999 by Russ Allbery <rra@stanford.edu>.  This program is
@@ -114,7 +114,7 @@ INSTALLATION
   You will also be prompted for what PGP style to default to, since each
   PGP implementation works slightly differently.  This has to be one of
   the following:  "PGP2" for PGP 2.6 workalikes, "PGP5" for PGP 5.0 and
-  workalikes, or "GPG" for GnuPG.  Again, PGP::Sigh will try to guess from
+  workalikes, or "GPG" for GnuPG.  Again, PGP::Sign will try to guess from
   the name of the binaries you chose.
 
   If you have multiple versions of PGP installed on your system, you still
@@ -193,6 +193,10 @@ THANKS
   working under GnuPG and PGP 5.0, and to him and Monte Mitzelfelt
   <monte@nm.net> for the initial GnuPG implementation that I based mine
   on.
+
+  To Lupe Christoph <lupe@lupe-christoph.de> for pointing out that Perl
+  5.005_03 sets close-on-exec on file handles created by pipe, requiring
+  an fcntl() call in PGP::Sign to unset that.
 
   To David Lawrence <tale@isc.org> and Greg Rose <ggr@usenix.org> for
   signcontrol and PGPMoose respectively, the motivating applications.
