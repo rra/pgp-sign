@@ -1,5 +1,6 @@
 Makefile
 PGP-Sign-*.tar.gz
+Sign.pm
 blib
 pm_to_blib
 paths
