@@ -1,7 +1,7 @@
 # PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
 # $Id$
 #
-# Copyright 1997, 1998, 1999, 2000, 2002 Russ Allbery <rra@stanford.edu>
+# Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery <rra@stanford.edu>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -324,7 +324,8 @@ sub pgp_verify {
     # Figure out what command line we'll be using.
     my @command;
     if ($PGPSTYLE eq 'GPG') {
-        @command = ($PGPV, '--batch', '--verify');
+        @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
+                    '--logger-fd=1');
     } else {
         @command = ($PGPV, '+batchmode');
     }
@@ -352,8 +353,7 @@ sub pgp_verify {
     # Check for the message that gives us the key status and return the
     # appropriate thing to our caller.  This part is a zoo due to all of the
     # different formats used.  GPG has finally done the right thing and
-    # implemented a separate status stream with parseable data, but I haven't
-    # gotten to implementing that yet....
+    # implemented a separate status stream with parseable data.
     #
     # Partly from pgpverify, by David Lawrence <tale@isc.org>:
     #
@@ -369,23 +369,29 @@ sub pgp_verify {
     #   gpg: Good signature from "Russ Allbery <rra@stanford.edu>"
     #
     # Also, PGP v2 prints out "Bad signature" while PGP v5 uses "BAD
-    # signature", PGP v6 reverts back to "Bad signature", and GPG uses the
-    # same but not at the beginning of a line.
+    # signature" and PGP v6 reverts back to "Bad signature".
     local $_;
     local $/ = '';
     my $signer;
     while (<$output>) {
-        if (/^Good signature from user(?::\s+(.*)|\s+\"(.*)\"\.)$/m) {
-            $signer = $+;
-            last;
-        } elsif (/^Good signature made .* by key:\n.+\n\s+\"(.*)\"/m) {
-            $signer = $1;
-            last;
-        } elsif (/^\S+: Good signature from \"(.*)\"/m) {
-            $signer = $1;
-            last;
-        } elsif (/^(?:\S+: )?Bad signature /im) {
-            last;
+        if ($PGPSTYLE eq 'GPG') {
+            if (/\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
+                $signer = $1;
+                last;
+            }
+        } else {
+            if (/^Good signature from user(?::\s+(.*)|\s+\"(.*)\"\.)$/m) {
+                $signer = $+;
+                last;
+            } elsif (/^Good signature made .* by key:\n.+\n\s+\"(.*)\"/m) {
+                $signer = $1;
+                last;
+            } elsif (/^\S+: Good signature from \"(.*)\"/m) {
+                $signer = $1;
+                last;
+            } elsif (/^(?:\S+: )?Bad signature /im) {
+                last;
+            }
         }
     }
     close $pgp;
@@ -598,9 +604,9 @@ way that I can see to get PGP to verify a detached signature without using
 files on disk, means that in order to maintain the intended default
 semantics of this module (manipulating detached signatures), I had to use
 temporary files in the implementation of pgp_verify().  PGP::Sign sets its
-umask before creating those temporary files and checks for race conditions,
-but files may be left behind in the event that an application using
-pgp_verify() crashes unexpectedly.
+umask before creating those temporary files and opens them with O_EXCL, but
+files may be left behind in the event that an application using pgp_verify()
+crashes unexpectedly.  Setting $PGP::Sign::TMPDIR is recommended.
 
 Also, because of this incompatibility, you need to be aware of what the
 process checking the signatures you generate is expecting.  If that process
@@ -617,6 +623,10 @@ removed (see section 5.2.1).  There is no difference specified there between
 attached and detached signatures, and GnuPG treated them both the same.
 Versions of GnuPG at least after 1.0 appear to have changed to follow the
 PGP behavior instead.
+
+When verification of a signature fails, currently not very much information
+about what failed is available (since an invalid signature isn't considered
+an error in the pgp_error() sense).
 
 =head1 CAVEATS
 
@@ -660,7 +670,8 @@ Russ Allbery <rra@stanford.edu>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 1997, 1998, 1999, 2000, 2002 Russ Allbery <rra@stanford.edu>
+Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery
+<rra@stanford.edu>.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -679,6 +690,7 @@ another version released came from Andrew Ford <A.Ford@ford-mason.co.uk>.
 Thank you.
 
 Original support for GnuPG from Todd Underwood <todd@nm.net> and Monte
-Mitzelfelt <monte@nm.net>.
+Mitzelfelt <monte@nm.net>.  Code for using --status-fd based on code by
+Marco d'Itri.
 
 =cut
