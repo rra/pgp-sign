@@ -678,19 +678,16 @@ under the same terms as Perl itself.
 
 =head1 HISTORY
 
-Based heavily on work by Andrew Gierth <andrew@erlenstar.demon.co.uk> and
-benefitting greatly from input, comments, suggestions, and help from him,
-this module came about in the process of implementing PGPMoose signatures
-and control message signatures for Usenet.  PGPMoose is the idea of Greg
-Rose <ggr@usenix.org>, and signcontrol and pgpverify are the idea of David
-Lawrence <tale@isc.org>.
+Based heavily on work by Andrew Gierth and benefitting greatly from input,
+comments, suggestions, and help from him, this module came about in the
+process of implementing PGPMoose signatures and control message signatures
+for Usenet.  PGPMoose is the idea of Greg Rose, and signcontrol and
+pgpverify are the idea of David Lawrence.
 
 Support for PGPPATH, the test suite, some bug fixes, and the impetus to get
-another version released came from Andrew Ford <A.Ford@ford-mason.co.uk>.
-Thank you.
+another version released came from Andrew Ford.  Thank you.
 
-Original support for GnuPG from Todd Underwood <todd@nm.net> and Monte
-Mitzelfelt <monte@nm.net>.  Code for using --status-fd based on code by
-Marco d'Itri.
+Original support for GnuPG from Todd Underwood and Monte Mitzelfelt.  Code
+for using --status-fd based on code by Marco d'Itri.
 
 =cut
