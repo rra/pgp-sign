@@ -5,8 +5,9 @@
 ^PGP-Sign-.*\.tar\.gz$
 ^Sign\.pm$
 ^blib/
+^data/random_seed$
 ^data/randseed.bin$
-^data/trustdb.gpg$'
+^data/trustdb.gpg$
 ^paths$
 ^pm_to_blib$
 ~$
