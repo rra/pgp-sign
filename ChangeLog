@@ -1,3 +1,16 @@
+Fri Dec  4 20:49:16 1998  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.13 released.
+
+        * Makefile.PL: Add two ugly hacks, one to let someone set the path
+        to PGP on the command line of "perl Makefile.PL," and the second
+        to strip the resulting extra dependency from the processPL
+        section.  Pass the path to PGP to makepm.PL on the command line if
+        it's given.
+
+        * makepm.PL: Add support for accepting the path to PGP on the
+        command line (and not prompting in that case).
+
 Wed Dec  2 02:11:01 1998  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * VERSION.pm: PGP::Sign 0.12 released.
