@@ -1,3 +1,21 @@
+2004-08-08  Russ Allbery  <rra@stanford.edu>
+
+	* VERSION.pm: PGP::Sign 0.19 released.
+
+	* Sign.in: Remove e-mail addresses from HISTORY since the
+	documentation is automatically put on the web.
+
+	* test.pl: Moved to...
+	* t/basic.t: ...here.  Updated the search for the data directory
+	accordingly.  Print more information when detached signatures fail
+	to verify.
+	* t/locale.t: New test.
+
+	* Sign.in (pgp_verify): Replaced verification code for GnuPG with
+	code that uses --status-fd, so that it will work independent of
+	locale.  Documented limitations in the error reporting and
+	recommended setting TMPDIR.
+
 2004-08-04  Russ Allbery  <rra@stanford.edu>
 
 	* VERSION.pm: PGP::Sign 0.18 released.

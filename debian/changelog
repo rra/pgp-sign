@@ -1,3 +1,10 @@
+libpgp-sign-perl (0.19-1) unstable; urgency=low
+
+  * New upstream release.
+    - Use --status-fd with GnuPG.  Fixes pgp_verify in non-English locales.
+
+ -- Russ Allbery <rra@stanford.edu>  Sun,  8 Aug 2004 02:57:42 -0700
+
 libpgp-sign-perl (0.18-1) unstable; urgency=low
 
   * Initial Release.
