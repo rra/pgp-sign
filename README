@@ -80,10 +80,12 @@ REQUIREMENTS
         PGP 5.0 (US Linux freeware version)
         PGP 6.5.2 (US Solaris freeware version)
         GnuPG 0.9.2 (Linux and Solaris)
-        GnuPG 1.0.1 (Linux and Solaris)
+        GnuPG 1.0.1 (Solaris)
 
-  If you successfully use this module with other versions of PGP not
-  listed above, please let me know.
+  (Note that GnuPG 0.9.2 will fail test 9 since it doesn't use the same
+  type of whitespace munging as PGP.  This has been changed in later
+  versions of GnuPG.)  If you successfully use this module with other
+  versions of PGP not listed above, please let me know.
 
   This module requires no other modules besides IPC::Open3 and FileHandle,
   both of which are part of Perl core and have been for some time.  It
@@ -171,6 +173,11 @@ TESTING
   6.5, and GnuPG), and DSS version four signatures (GnuPG only), and no
   one PGP implementation can handle all three (unless your GnuPG
   installation includes RSA support).
+
+  For some reason, the test suite fails the first time it's run with PGP
+  6.5 (at least on Solaris), giving error messages about not having enough
+  random bits, and then succeeds the second time.  I consider this to be a
+  bug in PGP 6.5, as no other version of PGP has this problem.
 
   Note that different PGP implementations return different things and
   therefore the test suite looks for different things depending on what
