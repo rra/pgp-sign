@@ -335,7 +335,7 @@ by the last pgp_sign() or pgp_verify(), or undef if there was no error.  In
 a list context, a list of lines is returned; in a scalar context, a long
 string with embedded newlines is returned.
 
-One global variable can be modified:
+Two global variables can be modified:
 
 =over 4
 
@@ -406,7 +406,8 @@ Russ Allbery <rra@stanford.edu>
 
 =head1 HISTORY
 
-Based heavily on work by Andrew Gierth <andrew@erlenstar.demon.co.uk>,
+Based heavily on work by Andrew Gierth <andrew@erlenstar.demon.co.uk> and
+benefitting greatly from input, comments, suggestions, and help from him,
 this module came about in the process of implementing PGPMoose signatures
 and control message signatures for Usenet.  PGPMoose is the idea of Greg
 Rose <ggr@usenix.org>, and signcontrol and pgpverify are the idea of David
