@@ -1,9 +1,9 @@
-                          PGP::Sign version 0.15
+                          PGP::Sign version 0.16
            (Create and verify detached PGP signatures for data)
 
-  Copyright 1997-1999 by Russ Allbery <rra@stanford.edu>.  This program is
-  free software; you may redistribute it and/or modify it under the same
-  terms as Perl itself.
+  Copyright 1997, 1998, 1999, 2000 by Russ Allbery <rra@stanford.edu>.
+  This program is free software; you may redistribute it and/or modify it
+  under the same terms as Perl itself.
 
 
 INTRODUCTION
@@ -51,10 +51,10 @@ INTRODUCTION
   version will probably support that too.
 
   This module supports a wide variety of different versions of PGP, from
-  PGP 2.6.2 to PGP 5.0 to the new (and very nice) GnuPG.  Different
-  implementations of PGP are capable (and not capable) of creating and
-  checking various types of signatures; obviously, what this module can do
-  is limited by what versions of PGP you have installed.
+  PGP 2.6.2 to PGP 5.0 to PGP 6.5 to the new (and very nice) GnuPG.
+  Different implementations of PGP are capable (and not capable) of
+  creating and checking various types of signatures; obviously, what this
+  module can do is limited by what versions of PGP you have installed.
 
   See the documentation for all the gory details, which really aren't that
   gory.  At least yet.
@@ -64,8 +64,8 @@ REQUIREMENTS
 
   This module requires a version of PGP that supports PGPPASSFD or some
   other mechanism for handing the passphrase over in a pipe.  2.6.2,
-  2.6.3i, 5.0, and GnuPG all do.  I can't personally vouch for any other
-  version, but I believe ViaCrypt PGP 4.0 may also work (since it's
+  2.6.3i, 5.0, 6.5, and GnuPG all do.  I can't personally vouch for any
+  other version, but I believe ViaCrypt PGP 4.0 may also work (since it's
   largely based on 2.6.2).  This module also requires an operating system
   that's capable of coping with pipes, forking, and passing file
   descriptors through an exec().  If your operating system can't, that's
@@ -78,7 +78,9 @@ REQUIREMENTS
         PGP 2.6.2 (US version)
         PGP 2.6.2i
         PGP 5.0 (US Linux freeware version)
+        PGP 6.5.2 (US Solaris freeware version)
         GnuPG 0.9.2 (Linux and Solaris)
+        GnuPG 1.0.1 (Linux and Solaris)
 
   If you successfully use this module with other versions of PGP not
   listed above, please let me know.
@@ -86,7 +88,7 @@ REQUIREMENTS
   This module requires no other modules besides IPC::Open3 and FileHandle,
   both of which are part of Perl core and have been for some time.  It
   should work with Perl 5.003 or later, although I personally have only
-  tested it with Perl 5.004_04 and 5.005_02.
+  tested it with Perl 5.004_04 and 5.005_03.
 
 
 INSTALLATION
@@ -102,20 +104,26 @@ INSTALLATION
   You'll probably need to do the last as root unless you're installing in
   your own private modules directory.
 
+  In order for make test to succeed if you're using GnuPG and egd (the
+  entropy daemon), you may have to make a symlink from data/entropy to the
+  entropy socket in your ~/.gnupg directory.
+
   When you run make, you will be prompted for the path to the program to
   create signatures and the program to verify signatures.  PGP::Sign will
   try to guess at what you may want to use, preferring GnuPG and then PGP
-  5.0.  For GnuPG or PGP 2.6, both paths should point to the same program;
-  for PGP 5.0, pgps is the program that generates signatures and pgpv is
-  the program that verifies them.  Don't set the signing program and the
-  verifying program to mutually incompatible things, or you'll get strange
-  results.
+  5.0.  For GnuPG, PGP 2.6, or PGP 6.5, both paths should point to the
+  same program; for PGP 5.0, pgps is the program that generates signatures
+  and pgpv is the program that verifies them.  Don't set the signing
+  program and the verifying program to mutually incompatible things, or
+  you'll get strange results.
 
   You will also be prompted for what PGP style to default to, since each
   PGP implementation works slightly differently.  This has to be one of
   the following:  "PGP2" for PGP 2.6 workalikes, "PGP5" for PGP 5.0 and
-  workalikes, or "GPG" for GnuPG.  Again, PGP::Sign will try to guess from
-  the name of the binaries you chose.
+  workalikes, "PGP6" for PGP 6.5 and workalikes, or "GPG" for GnuPG.
+  Again, PGP::Sign will try to guess from the name of the binaries you
+  chose (and distinguish between PGP2 and PGP6 based on the output of the
+  program when run without any arguments).
 
   If you have multiple versions of PGP installed on your system, you still
   have to pick one to be the default.  You'll be able to switch between
@@ -159,10 +167,10 @@ TESTING
 
   after running make.  Regardless of your PGP style, at least one test
   will be skipped, since PGP::Sign knows how to test RSA signatures (PGP
-  2.6 and PGP 5.0), DSS version three signatures (PGP 5.0 and GnuPG), and
-  DSS version four signatures (GnuPG only), and no one PGP implementation
-  can handle all three (unless your GnuPG installation includes RSA
-  support).
+  2.6, PGP 5.0, and PGP 6.5), DSS version three signatures (PGP 5.0, PGP
+  6.5, and GnuPG), and DSS version four signatures (GnuPG only), and no
+  one PGP implementation can handle all three (unless your GnuPG
+  installation includes RSA support).
 
   Note that different PGP implementations return different things and
   therefore the test suite looks for different things depending on what
@@ -177,9 +185,10 @@ TESTING
 THANKS
 
   To Andrew Gierth <andrew@erlenstar.demon.co.uk> for the inspiration and
-  motivation to write this and the reminder that PGPPASSFD existed, and
-  also for being one of the two people who caught the mistake I made with
-  $? and open3().
+  motivation to write this and the reminder that PGPPASSFD existed, for
+  being one of the two people who caught the mistake I made with $? and
+  open3(), and for pointing out a missing waitpid() in pgp_verify() that
+  was causing zombies.
 
   To Jon Ribbens <jon@oaktree.co.uk> for pointing out that $? isn't
   guaranteed to contain the exit status of something called from open3()
@@ -197,6 +206,9 @@ THANKS
   To Lupe Christoph <lupe@lupe-christoph.de> for pointing out that Perl
   5.005_03 sets close-on-exec on file handles created by pipe, requiring
   an fcntl() call in PGP::Sign to unset that.
+
+  To J. Porter Clark <porter.clark@msfc.nasa.gov> for information about
+  the socket needed for GnuPG with egd support.
 
   To David Lawrence <tale@isc.org> and Greg Rose <ggr@usenix.org> for
   signcontrol and PGPMoose respectively, the motivating applications.
