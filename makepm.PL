@@ -51,7 +51,7 @@ EOM
 print 'Path to PGP [' . ($pgp || '/usr/local/bin/pgp') . ']: ';
 my $input = <STDIN>;
 chomp $input;
-$pgp = $pgp || $input || '/usr/local/bin/pgp';
+$pgp = $input || $pgp || '/usr/local/bin/pgp';
 print "\n";
 
 # Now, open our input file and create our output file, and then do the
