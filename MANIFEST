@@ -3,6 +3,7 @@ MANIFEST
 Makefile.PL
 PGP/Sign.in
 README
+TODO
 VERSION.pm
 data/message
 data/message.asc
