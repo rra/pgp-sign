@@ -79,9 +79,9 @@ print "ok 8\n";
 
 # 9 (check signature of munged data against unmunged data w/o MUNGE)
 # Whether this signature verifies under GnuPG depends on the version of
-# GnuPG; GnuPG 1.0.2 verifies it, while GnuPG 1.0.1 doesn't.  Earlier
-# versions do verify it.  This is a disagreement over how to handle
-# trailing whitespace when verifying signatures.
+# GnuPG; GnuPG 1.0.2 and higher verify it, but GnuPG 1.0.1 doesn't.
+# Earlier versions do verify it.  This is a disagreement over how to
+# handle trailing whitespace when verifying signatures.
 if ($PGP::Sign::PGPSTYLE eq 'GPG') {
     print "ok 9 # skip\n";
 } else {
