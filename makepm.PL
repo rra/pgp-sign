@@ -37,9 +37,12 @@ sub find_pgp {
 # Used for heredocs to make them more readable.
 sub unquote { my ($string) = @_; $string =~ s/^: {0,7}//gm; $string }
 
-# Do the search, and prompt based on the results.
-my $pgp = find_pgp;
-print unquote (<<"EOM");
+# Do the search, and prompt based on the results.  We also allow someone to
+# give us a path to PGP on the command line, in which case we just use that
+# path and don't prompt.
+my $pgp = $ARGV[0] || find_pgp;
+unless ($ARGV[0]) {
+    print unquote (<<"EOM");
 :
 :       PGP::Sign needs to know the path to PGP; this path will be encoded
 :       in the installed module as the default path to PGP (it can be
@@ -48,11 +51,12 @@ print unquote (<<"EOM");
 :       or just press Enter if the guess is correct.
 :
 EOM
-print 'Path to PGP [' . ($pgp || '/usr/local/bin/pgp') . ']: ';
-my $input = <STDIN>;
-chomp $input;
-$pgp = $input || $pgp || '/usr/local/bin/pgp';
-print "\n";
+    print 'Path to PGP [' . ($pgp || '/usr/local/bin/pgp') . ']: ';
+    my $input = <STDIN>;
+    chomp $input;
+    $pgp = $input || $pgp || '/usr/local/bin/pgp';
+    print "\n";
+}
 
 # Now, open our input file and create our output file, and then do the
 # necessary substitutions.
