@@ -24,13 +24,6 @@ Additions to this file are also welcome.
    also be handled this way, and probably the other global variables as
    well while we're at it.
 
- * PGP::Sign currently treats GnuPG like any other PGP implementation and
-   parses its output with some hackish regexes to find the signer of a
-   verified signature.  This breaks horribly in the face of i18n.  GnuPG
-   has a different, *much* nicer programmatic interface in the form of
-   --status-fd, which tells it to output information in a format designed
-   for parsing by other programs.  This should be used instead.
-
  * All of the information about a signature should be available, not just
    the key ID and whether or not it verified.  It's a little tempting to
    make PGP::Sign return a queriable object here, but I'd rather stay away
@@ -56,6 +49,12 @@ Additions to this file are also welcome.
    stuff and have it be broken only for 5.003, or do a similar switch in
    several other places....  I don't think it works right with tied file
    handles right now either.
+
+ * Information about why a signature verification failed isn't provided to
+   the caller, and the additional parsable error tokens returned by GnuPG
+   aren't taken advantage of.  The caller should be able to get
+   information about exactly why a signature verification failed (no
+   public key found, bad signature, malformed data, etc.).
 
 And here's the really big one:
 
