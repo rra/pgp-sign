@@ -1,4 +1,16 @@
+Fri Nov 27 15:37:30 1998  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.11 released.
+
+        * Makefile.PL: Added a MAN3PODS directive to prevent MakeMaker
+        from generating a PGP::PGP::Sign man page, changed the formatting
+        of the 5.005-only section.
+
 Thu Nov 26 03:53:56 1998  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * Makefile.PL: Added ABSTRACT and AUTHOR for Perl versions 5.005
+        and higher.  This is for the PPD to go with a binary distribution,
+        and for Perl Resource Kits.
 
         * VERSION.pm: PGP::Sign 0.10 released.
 
@@ -39,7 +51,7 @@ Thu Nov 26 03:53:56 1998  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * data/secring.pgp: New file.
 
-Sun Jul  5 03:31:57 1998  Russ Allbery  <eagle@windlord.Stanford.EDU>
+Sun Jul  5 03:31:57 1998  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * Sign.pm: PGP::Sign 0.9 released.
 
@@ -49,7 +61,7 @@ Sun Jul  5 03:31:57 1998  Russ Allbery  <eagle@windlord.Stanford.EDU>
         things up a little and explicitly set $/ in case our calling
         program had it set to something odd.
 
-Mon Aug 18 07:18:09 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+Mon Aug 18 07:18:09 1997  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * Sign.pm: PGP::Sign 0.8 released.
         
@@ -57,7 +69,7 @@ Mon Aug 18 07:18:09 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
         umask on completion) since we're creating temporary files.
         (pgp_sign): Added a check to see if we got a signature at all.
 
-Fri Aug 15 02:37:34 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+Fri Aug 15 02:37:34 1997  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * Sign.pm: PGP::Sign 0.7 released.
 
@@ -71,7 +83,7 @@ Fri Aug 15 02:37:34 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
         rather than printing it directly, added documentation of the new
         behavior to the PODs.
 
-Tue Jul 29 02:26:39 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+Tue Jul 29 02:26:39 1997  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * Sign.pm: Removed $ORS, which was a hack that we don't need any
         more.  That work should be done by the client, and the client is
@@ -83,7 +95,7 @@ Tue Jul 29 02:26:39 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
         to create temporary files.  Changed the documentation to include
         notes about all of this.
 
-Sun Jul 27 13:42:01 1997  Russ Allbery  <eagle@windlord.Stanford.EDU>
+Sun Jul 27 13:42:01 1997  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * Sign.pm: Broke write_data() off into a separate function, added
         pgp_verify() and tested it, changed the documentation to mention
