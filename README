@@ -1,9 +1,9 @@
-                          PGP::Sign version 0.09
+                          PGP::Sign version 0.10
                 (Create detached PGP signatures for data)
 
-  Copyright 1997 by Russ Allbery <rra@stanford.edu>.  All rights reserved.
-  This program is free software; you may redistribute it and/or modify it
-  under the same terms as Perl itself.
+  Copyright 1997, 1998 by Russ Allbery <rra@stanford.edu>.  All rights
+  reserved.  This program is free software; you may redistribute it and/or
+  modify it under the same terms as Perl itself.
 
 
 INTRODUCTION
@@ -54,32 +54,30 @@ INTRODUCTION
 REQUIREMENTS
 
   This module requires a version of PGP that supports PGPPASSFD.  2.6.2
-  does.  I can't personally vouch for any other version.  This module also
-  requires an operating system that's capable of coping with pipes,
-  forking, and passing file descriptors through an exec().  If your
+  and 2.6.3i do.  I can't personally vouch for any other version.  This
+  module also requires an operating system that's capable of coping with
+  pipes, forking, and passing file descriptors through an exec().  If your
   operating system can't, that's considered by this module author to be a
   bug in your operating system and not in this module.
 
 
 INSTALLATION
 
-  Edit Sign.pm and change the path to PGP right at the beginning (under
-  "Global variables") if necessary, and then follow the standard
-  installation procedure for Perl modules, which is to type the following
-  commands:
+  Follow the standard installation procedure for Perl modules, which is to
+  type the following commands:
 
         perl Makefile.PL
         make
+        make test
         make install
 
-  You'll probably need to do the last as root.  There is no test suite yet
-  and probably won't be one since a test suite would require guaranteeing
-  the presence of some particular PGP key and pass phrase on your keyring
-  for testing purposes.  There's also no reason why you can't simply copy
-  the file Sign.pm into a subdirectory called PGP in your site_perl
-  directory, which is probably a considerably less anal approach than the
-  above but which robs you from enjoying the power and glory that *is*
-  ExtUtils::MakeMaker.
+  You'll probably need to do the last as root.  When you run make, you
+  will be prompted for the path to PGP; make sure this is correct, since
+  this will be coded into the module when it's installed.
+
+  There is a small test suite that uses the files in data to make sure
+  that signing and checking of signatures work.  More test cases are
+  welcome, particularly if you find a bug.
 
 
 THANKS
@@ -92,6 +90,10 @@ THANKS
   To Jon Ribbens <jon@oaktree.co.uk> for pointing out that $? isn't
   guaranteed to contain the exit status of something called from open3()
   unless you do a waitpid() for it first.
+
+  To Andrew Ford <A.Ford@ford-mason.co.uk> for adding PGPPATH support
+  and adding a test suite and code in Makefile.PL to search for an
+  installed version of PGP.
 
   To David Lawrence <tale@isc.org> and Greg Rose <ggr@usenix.org> for
   signcontrol and PGPMoose respectively, the motivating applications.
