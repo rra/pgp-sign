@@ -1,10 +1,4 @@
 ChangeLog
-MANIFEST
-Makefile.PL
-README
-Sign.in
-TODO
-VERSION.pm
 data/message
 data/message.asc
 data/message.asc.v4
@@ -15,6 +9,17 @@ data/pubring.pkr
 data/secring.gpg
 data/secring.pgp
 data/secring.skr
-data/trustdb.gpg
+debian/changelog
+debian/compat
+debian/control
+debian/copyright
+debian/files
+debian/rules
+Makefile.PL
 makepm.PL
+MANIFEST			This list of files
+README
+Sign.in
 test.pl
+TODO
+VERSION.pm
