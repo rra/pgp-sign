@@ -180,7 +180,8 @@ sub pgp_sign {
     if ($PGPSTYLE eq 'PGP5') {
         @command = ($PGPS, '+batchmode', '-baft', '-u', $keyid);
     } elsif ($PGPSTYLE eq 'GPG') {
-        @command = ($PGPS, '-bat', '--batch', '-u', $keyid);
+        @command = ($PGPS, '--detach-sign', '--armor', '--textmode',
+                    '--batch', '--force-v3-sigs', '-u', $keyid);
     } else {
         @command = ($PGPS, '+batchmode', '-sbaft', '-u', $keyid);
     }
@@ -458,11 +459,15 @@ in the signature).  Warning:  It's expected that in the future this
 interface will change, and pgp_sign() will instead return a list
 consisting of the ASCII-armored block and all headers found in the armor.
 
+If you're using GnuPG, pgp_sign() will pass it the option
+C<--force-v3-sigs> so that it will generate PGP 5.0-compatible signatures.
+
 pgp_sign() will return undef in the event of any sort of error.
 
 pgp_verify() returns the signer of the message in the case of a good
 signature, the empty string in the case of a bad signature, and undef in
-the event of some error.
+the event of some error.  It takes the same sort of data sources as
+pgp_sign().
 
 pgp_error() (which isn't exported by default) returns the error
 encountered by the last pgp_sign() or pgp_verify(), or undef if there was
@@ -574,6 +579,9 @@ PGP::Sign does not currently work with binary data, as it unconditionally
 forces text mode in PGP by using the C<-t> option.  This is a high
 priority to fix, but I'd like to implement some sort of generic way of
 setting PGP options rather than just adding more entry points.
+
+There's no way of generating version four DSS signatures.  This will be
+fixed by the same improvement that will fix the previous bug.
 
 There are some serious and annoying hidden incompatibilities and
 undocumented "features" of different implementations of PGP that make
