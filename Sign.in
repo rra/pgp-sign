@@ -35,7 +35,7 @@ use IPC::Open3 qw(open3);
 @EXPORT_OK = qw(pgp_error);
 
 use strict;
-use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $PGP $TMPDIR $VERSION);
+use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGP $TMPDIR $VERSION);
 
 ($VERSION = (split (' ', q$Revision$ ))[1]) =~ s/\.(\d)$/.0$1/;
 
@@ -54,10 +54,34 @@ $TMPDIR = $ENV{TMPDIR} || '/tmp';
 # The text of any errors resulting from the last call to pgp_sign().
 @ERROR = ();
 
+# Whether or not to perform some standard munging to make other signing and
+# checking routines happy.
+$MUNGE = 0;
+
 
 ############################################################################
 # Implementation
 ############################################################################
+
+# This function actually sends the data to a file handle.  It's necessary to
+# implement munging (stripping trailing spaces on a line and quoting leading
+# dashes).
+{
+    my $spaces = '';
+    sub output {
+        my ($fh, $string) = @_;
+        if ($MUNGE) {
+            $string = $spaces . $string;
+            $string =~ s/ +(\n.)/$1/g;
+            my $newline = ($string =~ s/\n$//);
+            $string =~ s/( +)$//;
+            if ($newline) { $string .= "\n" } else { $spaces = $1 }
+        } else {
+            $spaces = '';
+        }
+        print $fh $string;
+    }
+}
 
 # This is our generic "take this data and shove it" routine, used both for
 # signature generation and signature checking.  The first argument is the
@@ -86,35 +110,35 @@ sub write_data {
     my $source;
     for $source (@_) {
         if (ref $source eq 'ARRAY' or ref $source eq 'HASH') {
-            for (@$source) { print $fh $_ }
+            for (@$source) { output ($fh, $_) }
         } elsif (ref $source eq 'GLOB' or ref \$source eq 'GLOB') {
             local $_;
-            while (<$source>) { print $fh $_ }
+            while (<$source>) { output ($fh, $_) }
         } elsif (ref $source eq 'SCALAR') {
-            print $fh $$source;
+            output ($fh, $$source);
         } elsif (ref $source eq 'CODE') {
             local $_;
-            while (defined ($_ = &$source ())) { print $fh $_ }
+            while (defined ($_ = &$source ())) { output ($fh, $_) }
         } elsif (ref $source eq 'REF') {
-            print $fh $source;
+            output ($fh, $source);
         } elsif (ref $source)  {
             if ($] > 5.003) {
                 if (UNIVERSAL::isa ($source, 'IO::Handle')) {
                     local $_;
-                    while (<$source>) { print $fh $_ }
+                    while (<$source>) { output ($fh, $_) }
                 } else {
-                    print $fh $source;
+                    output ($fh, $source);
                 }
             } else {
                 if (ref $source eq 'FileHandle') {
                     local $_;
-                    while (<$source>) { print $fh $_ }
+                    while (<$source>) { output ($fh, $_) }
                 } else {
-                    print $fh $source;
+                    output ($fh, $source);
                 }
             }
         } else {
-            print $fh $source;
+            output ($fh, $source);
         }
     }
 }
@@ -350,6 +374,14 @@ installation.
 The directory in which temporary files are created.  Defaults to TMPDIR if
 set, and F</tmp> if not.
 
+=item $PGP::Sign::MUNGE
+
+If this variable is set to a true value, PGP::Sign will automatically
+strip trailing spaces when signing or verifying signatures.  This will
+make the resulting signatures and verification compatible with programs
+that generate attached signatures (since PGP ignores trailing spaces when
+generating or checking attached signatures).
+
 =back
 
 =head1 ENVIRONMENT
@@ -359,7 +391,7 @@ set, and F</tmp> if not.
 =item TMPDIR
 
 The directory in which to create temporary files.  Can be overridden by
-changing $PGP::Sign::TMPDIR.
+changing $PGP::Sign::TMPDIR.  If not set, defaults to F</tmp>.
 
 =back
 
@@ -378,7 +410,10 @@ given the current implementation of PGP, there isn't any way to avoid
 this, since we want to generate detached signatures.  It would be possible
 to do everything through pipes if we generated attached signatures, but
 then we would have to deal with PGP data munging, which is ugly and
-underdocumented.
+underdocumented.  We also wouldn't be able to work with applications that
+want detached signatures, and since we are returning a signature that's
+logically detached from the signed data, it doesn't make any sense to have
+the signature be of the form used for attached signatures.
 
 =head1 CAVEATS
 
@@ -395,10 +430,8 @@ certain substandard operating systems.
 
 The signature generated is a detached signature.  If you intend to pass it
 to an application that will attempt to verify it by creating a signed
-document (the way pgpverify does), you'll need to perform all munging to
-the data that PGP would *before* passing that data to pgp_sign() (or while
-passing it to pgp_sign(), using a code reference).  In general, this means
-doing C<s/\s+$//> and C<s/^-/- -/> or their moral equivalents.
+document (the way pgpverify does), you'll need to set $PGP::Sign::MUNGE
+before creating the signature.
 
 =head1 AUTHOR
 
