@@ -1,3 +1,10 @@
+Wed Dec  2 02:11:01 1998  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.12 released.
+
+        * makepm.PL: The path to PGP that the user inputs should override
+        any other path to PGP that we find.
+
 Fri Nov 27 15:37:30 1998  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * VERSION.pm: PGP::Sign 0.11 released.
