@@ -14,14 +14,14 @@ open (VERSION, 'VERSION.pm') or die "Cannot open VERSION.pm: $!\n";
 my $version = <VERSION>;
 close VERSION;
 
-# Search for PGP, prefering GPG, then PGP v5.0, then PGP v2.6.  We start by
-# searching the user's PATH, and then check a few other standard
+# Search for PGP, prefering GPG, then PGP v6.5 or v2.6, then PGP v5.0.  We
+# start by searching the user's PATH, and then check a few other standard
 # directories.  We just look for the program used for signing, assuming the
 # program used for verification will be found in the same place.
 sub find_pgp {
     my @directories = map { s/^$/./; $_ } split (':', $ENV{PATH});
     push (@directories, qw(/usr/local/bin /usr/bin /opt/bin));
-    my @programs = qw(gpg pgps pgp pgp2 pgp26 pgp263 pgp262);
+    my @programs = qw(gpg pgp pgp65 pgp6 pgps pgp2 pgp26 pgp263 pgp262);
     my $directory;
     for $directory (@directories) {
         next unless -d $directory;
@@ -49,8 +49,8 @@ unless ($PGPV && $PGPS && $PGPSTYLE) {
 :       in the installed module as the default path to PGP (it can be
 :       overridden at runtime).  Please enter the full path to the PGP
 :       program you want to use to sign messages (if you are using version
-:       5.0, this should be the path to pgps) or just press Enter if the
-:       guess is correct.
+:       5.0 or 6.5, this should be the path to pgps) or just press Enter if
+:       the guess is correct.
 :
 EOM
     $PGPS ||= '/usr/local/bin/pgp';
@@ -72,19 +72,27 @@ EOM
 :       PGP::Sign also needs to know what implementation of PGP you are
 :       using.  Acceptable values are "PGP2" for PGP 2.6 and workalikes
 :       (this may also work for ViaCrypt PGP 4.0), "PGP5" for PGP 5.0 and
-:       workalikes, or "GPG" for GnuPG.  Please enter one of those possible
-:       values or just press Enter if the guess is correct.
+:       workalikes, "PGP6" for PGP 6.0 and workalikes, or "GPG" for GnuPG.
+:       Please enter one of those possible values or just press Enter if
+:       the guess is correct.
 :
 EOM
     {
         if    ($PGPS =~ m%pgps[^/]*$%) { $PGPSTYLE = 'PGP5' }
         elsif ($PGPS =~ m%gpg[^/]*$%)  { $PGPSTYLE = 'GPG'  }
-        else                           { $PGPSTYLE = 'PGP2' }
+        else {
+            my $version = `$PGPS 2>&1`;
+            if ($version =~ /Pretty Good Privacy.* 6\./) {
+                $PGPSTYLE = 'PGP6';
+            } else {
+                $PGPSTYLE = 'PGP2';
+            }
+        }
         print "PGP style [$PGPSTYLE]: ";
         my $input = <STDIN>;
         chomp $input;
         $PGPSTYLE = uc ($input || $PGPSTYLE);
-        unless ({PGP5 => 1, GPG => 1, PGP2 => 1}->{$PGPSTYLE}) {
+        unless ({PGP5 => 1, PGP6 => 1, GPG => 1, PGP2 => 1}->{$PGPSTYLE}) {
             print "\nUnknown PGP style '$PGPSTYLE'\n\n";
             redo;
         }
