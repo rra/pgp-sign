@@ -27,7 +27,7 @@ package PGP::Sign;
 require 5.003;
 
 use Exporter ();
-use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
+use Fcntl qw(F_SETFD O_WRONLY O_CREAT O_EXCL);
 use FileHandle ();
 use IPC::Open3 qw(open3);
 
@@ -191,9 +191,13 @@ sub pgp_sign {
     # to snoopers on the system.  So we create a pipe, stick the password in
     # it, and then pass the file descriptor to PGP.  PGP wants to know about
     # this in an environment variable; GPG uses a command-line flag.
+    # 5.005_03 started setting close-on-exec on file handles > $^F, so we
+    # need to clear that here (but ignore errors on platforms where fcntl or
+    # F_SETFD doesn't exist, if any).
     my $passfh = new FileHandle;
     my $writefh = new FileHandle;
     pipe ($passfh, $writefh);
+    eval { fcntl ($passfh, F_SETFD, 0) };
     print $writefh $passphrase;
     close $writefh;
     local $ENV{PGPPASSFD};
@@ -460,7 +464,7 @@ interface will change, and pgp_sign() will instead return a list
 consisting of the ASCII-armored block and all headers found in the armor.
 
 If you're using GnuPG, pgp_sign() will pass it the option
-C<--force-v3-sigs> so that it will generate PGP 5.0-compatible signatures.
+B<--force-v3-sigs> so that it will generate PGP 5.0-compatible signatures.
 
 pgp_sign() will return undef in the event of any sort of error.
 
@@ -499,6 +503,10 @@ The path to a directory containing the PGP key rings that should be used.
 If this isn't set, all versions of PGP will use the value of the
 environment variable PGPPATH or F<$HOME/.pgp> (the default).  GnuPG will
 use the value of the environment variable GNUPGHOME or F<$HOME/.gnupg>.
+Note that PGP when signing may want to write F<randseed.bin> in this
+directory if there isn't already a random seed there, so if you're
+encountering problems with signing, make sure the directory PGP is using
+is writeable by the user doing the signing.
 
 =item $PGP::Sign::PGPSTYLE
 
