@@ -1,3 +1,34 @@
+2000-02-12  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * VERSION.pm: PGP::Sign 0.16 released.
+
+        * README: Updated for the support of PGP 6.5, added a note about
+        the entropy socket when running tests if using GnuPG and egd,
+        added a parenthetical about how the build process distinguishes
+        between PGP v2 and PGP v6, added another thank you to Andrew
+        Gierth for pointing out the extra needed waitpid(), added a thank
+        you to J. Porter Clark for the information about egd.  Added notes
+        about the whitespace munging differences in GnuPG 0.9.2 and the
+        first pass test suite failures under PGP 6.5.  Updated for 0.16.
+
+        * Makefile.PL: Clean up all the additional junk created in data by
+        running the test suite with PGP 6.5.
+
+        * makepm.PL: Also look for PGP 6.5, distinguish between PGP 2 and
+        PGP 6 by checking its output when run without any arguments, and
+        add the PGP6 PGPSTYLE.
+
+        * Sign.in: Added a waitpid() in pgp_verify() to avoid leaving
+        zombies behind.  Updated comments and documentation for the new
+        support for PGP 6.5.2 and for the change to GnuPG so that it does
+        the same whitespace munging as PGP.
+
+2000-02-06  Russ Allbery  <eagle@windlord.stanford.edu>
+
+        * test.pl: The signature in test 9 now expected to fail on all
+        versions of PGP, as the release GnuPG was changed to follow PGP in
+        its handling of whitespace.
+
 Sun Jun 13 12:37:00 1999  Russ Allbery  <eagle@windlord.stanford.edu>
 
         * VERSION.pm: PGP::Sign 0.15 released.

@@ -1,2 +1,2 @@
 package PGP::Sign;
-$VERSION = '0.15';
+$VERSION = '0.16';
