@@ -30,11 +30,12 @@ use Exporter ();
 use FileHandle ();
 use IPC::Open3 qw(open3);
 
-@ISA    = qw(Exporter);
-@EXPORT = qw(pgp_sign pgp_verify);
+@ISA       = qw(Exporter);
+@EXPORT    = qw(pgp_sign pgp_verify);
+@EXPORT_OK = qw(pgp_error);
 
 use strict;
-use vars qw($VERSION @ERROR $ORS $PGP);
+use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $PGP $TMPDIR $VERSION);
 
 ($VERSION = (split (' ', q$Revision$ ))[1]) =~ s/\.(\d)$/.0$1/;
 
@@ -47,12 +48,8 @@ use vars qw($VERSION @ERROR $ORS $PGP);
 # installed.  The default is /usr/local/bin/pgp.
 $PGP = '/usr/local/bin/pgp';
 
-# It's possible that we may want to send pgp_sign lines that aren't newline
-# terminated but want the newlines to be added before the signature is
-# generated.  If we allow an output record separator to be set, that will
-# let us do that without a high memory cost for a join.  (We actually also
-# honor $\, but this is cleaner.  The default is undef.
-undef $ORS;
+# The directory in which temporary files should be created.
+$TMPDIR = $ENV{TMPDIR} || '/tmp';
 
 # The text of any errors resulting from the last call to pgp_sign().
 @ERROR = ();
@@ -76,11 +73,8 @@ undef $ORS;
 sub write_data {
     my $fh = shift;
 
-    # Set our output record separator if one has been requested.
-    local $\ = $ORS if defined $ORS;
-
-    # Now, we deal with all of our possible sources of input, one at a time.
-    # We really want perl 5.004 here, since we want UNIVERSAL::isa().
+    # Deal with all of our possible sources of input, one at a time.  We
+    # really want perl 5.004 here, since we want UNIVERSAL::isa().
     # Unfortunately, we can't rely on 5.004 yet.  *But*, the main reason we
     # want isa() is to handle the various derived IO::Handle classes, and
     # 5.003 should only have FileHandle, so we can hack our way around that.
@@ -125,7 +119,6 @@ sub write_data {
     }
 }
 
-
 # Create a detached signature for the given data.  The first argument should
 # be a key id and the second argument the PGP passphrase, and then all
 # remaining arguments are considered to be part of the data to be signed and
@@ -134,7 +127,8 @@ sub write_data {
 # In a scalar context, the signature is returned as an ASCII-armored block
 # with embedded newlines.  In array context, a list consisting of the
 # signature and the PGP version number is returned.  Returns undef in the
-# event of an error, and the error text is then stored in @PGP::Sign::ERROR.
+# event of an error, and the error text is then stored in @PGP::Sign::ERROR
+# and can be retrieved with pgp_error().
 sub pgp_sign {
     my $keyid = shift;
     my $passphrase = shift;
@@ -160,7 +154,7 @@ sub pgp_sign {
     my $pgp = new FileHandle;
     my $signature = new FileHandle;
     my $errors = new FileHandle;
-    my @command = ($PGP, '+batchmode', '-sabft', '-u', $keyid);
+    my @command = ($PGP, '+batchmode', '-sbaft', '-u', $keyid);
     eval { open3 ($pgp, $signature, $errors, @command) };
     if ($@) {
         @ERROR = ($@, "Execution of pgp failed.\n");
@@ -185,7 +179,7 @@ sub pgp_sign {
 
     # Now, clean up the returned signature and return it, along with the
     # version number if desired.
-    1 while ((shift @signature) !~ /-----BEGIN PGP .*-----/);
+    1 while ((shift @signature) ne "-----BEGIN PGP MESSAGE-----\n");
     my $version;
     while ($signature[0] ne "\n") {
         ($version) = ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
@@ -212,43 +206,50 @@ sub pgp_verify {
     # Ignore SIGPIPE, since we're going to be talking to PGP.
     local $SIG{PIPE} = 'IGNORE';
 
-    # Fork off a pgp process that we're going to be feeding data to, and
-    # tell it to just generate a signature using the given key id and pass
-    # phrase.
-    my $pgp = new FileHandle;
-    my $message = new FileHandle;
-    my $check = new FileHandle;
-    eval { open3 ($pgp, $message, $check, $PGP, '-f') };
-    if ($@) {
-        @ERROR = ($@, "Execution of pgp failed.\n");
+    # Because this is a detached signature, we actually need to save both
+    # the signature and the data to files and then run PGP on the signature
+    # file to make it verify the signature.  Because this is a detached
+    # signature, though, we don't have to do any data mangling, which makes
+    # our lives much easier.  It would be nice to do this without having to
+    # use temporary files.  Maybe with PGP 5.0.
+    my $filename = $TMPDIR . '/pgp' . time . '.' . $$;
+    my $sigfile = new FileHandle ">$filename.asc";
+    unless ($sigfile) {
+        @ERROR = ("Unable to open temp file $filename.asc: $!\n");
         return undef;
     }
-
-    # Now, send PGP a structured message that looks like a normal PGP
-    # message.  It's going to spit the message back at us on $message and
-    # the status of the signature on $check.
-    print $pgp "-----BEGIN PGP SIGNED MESSAGE-----\n\n";
-    unshift (@_, $pgp);
+    print $sigfile "-----BEGIN PGP MESSAGE-----\n";
+    if (defined $version) { print $sigfile "Version: $version\n\n" }
+    print $sigfile $signature;
+    print $sigfile "\n-----END PGP MESSAGE-----\n";
+    close $sigfile;
+    my $datafile = new FileHandle ">$filename";
+    unless ($datafile) {
+        unlink "$filename.asc";
+        @ERROR = ("Unable to open temp file $filename: $!\n");
+        return undef;
+    }
+    unshift (@_, $datafile);
     &write_data;
-    print $pgp "\n-----BEGIN PGP SIGNATURE-----\n";
-    if (defined $version) { print $pgp "Version: $version\n\n" }
-    print $pgp $signature;
-    print $pgp "\n-----END PGP SIGNATURE-----\n";
+    close $datafile;
 
-    # All done.  Close the pipe to PGP, clean up, and see if we succeeded.
-    # If not, save the error output and return undef.
-    close $pgp;
-    if ($? != 0) {
-        @ERROR = (<$check>, "PGP returned exit status $?\n");
+    # Now, call PGP to check the signature.  Because we've written
+    # everything out to a file, this is actually fairly simple; all we need
+    # to do is grab stdout.  PGP prints its banner information to stderr
+    # (??), so just ignore stderr.
+    my $command = "$PGP +batchmode $filename.asc $filename";
+    my $pgp = new FileHandle "$command 2> /dev/null |";
+    unless ($pgp) {
+        unlink $filename, "$filename.asc";
+        @ERROR = ("Execution of pgp failed: $!\n");
         return undef;
     }
 
-    # We seem to have successfully run pgp.  Check for the message that
-    # gives us the key status and return the appropriate thing to our
-    # caller.
+    # Check for the message that gives us the key status and return the
+    # appropriate thing to our caller.
     local $_;
     my $signer;
-    while (<$check>) {
+    while (<$pgp>) {
         if (/^Good signature from user(?::\s+(.*)|\s+\"(.*)\"\.)\n$/) {
             $signer = $+;
             last;
@@ -256,10 +257,16 @@ sub pgp_verify {
             last;
         }
     }
-    close $message;
-    close $check;
+    close $pgp;
     undef @ERROR;
+    unlink $filename, "$filename.asc";
     $signer ? $signer : '';
+}
+
+# Return the errors resulting from the last call to pgp_sign() or
+# pgp_verify() or the empty list if there are none.
+sub pgp_error {
+    wantarray ? @ERROR : join ('', @ERROR);
 }
 
 
@@ -281,6 +288,7 @@ PGP::Sign - Create detached PGP signatures for data, securely
     use PGP::Sign;
     ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
     $signer = pgp_verify ($signature, $version, @data);
+    @errors = PGP::Sign::pgp_error;
 
 =head1 DESCRIPTION
 
@@ -322,8 +330,12 @@ pgp_verify() returns the signer of the message in the case of a good
 signature, the empty string in the case of a bad signature, and undef in
 the event of some error.
 
-There are three module variables you can set (yes, this is a slightly ugly
-interface, and it may be made cleaner in the future):
+pgp_error() (which isn't exported by default) returns the error encountered
+by the last pgp_sign() or pgp_verify(), or undef if there was no error.  In
+a list context, a list of lines is returned; in a scalar context, a long
+string with embedded newlines is returned.
+
+One global variable can be modified:
 
 =over 4
 
@@ -333,28 +345,40 @@ The path to PGP.  This defaults to F</usr/local/bin/pgp>, but may have
 been fixed to point at the right place by the module installer during
 installation.
 
-=item $PGP::Sign::ORS
+=item $PGP::Sign::TMPDIR
 
-Just like C<$\> or C<$ORS> under C<use English>, this is the output record
-separator (what's put between each data element, each element of an array,
-and each line of a file handle as it's sent to PGP to be signed or
-verified).  Depending on what you're doing, it may be convenient to set
-this to something like "\n", although in general you should probably avoid
-using this feature.
+The directory in which temporary files are created.  Defaults to TMPDIR if
+set, and F</tmp> if not.
 
-=item @PGP::Sign::ERROR
+=back
 
-In the event of an error, this holds the output from PGP or some other
-informative error message.
+=head1 ENVIRONMENT
+
+=over 4
+
+=item TMPDIR
+
+The directory in which to create temporary files.  Can be overridden by
+changing $PGP::Sign::TMPDIR.
 
 =back
 
 =head1 DIAGNOSTICS
 
-Mostly the contents of @PGP::Sign::ERROR is completely determined by PGP.
-The only thing that this module may stick in there is "Execution of PGP
-failed" if we couldn't fork off a PGP process and "PGP returned exit
-status %d" in the event of a non-zero exit status from PGP.
+Mostly the contents of @PGP::Sign::ERROR (returned by pgp_error()) are
+completely determined by PGP.  The only thing that this module may stick
+in there is "Execution of PGP failed" if we couldn't fork off a PGP
+process and "PGP returned exit status %d" in the event of a non-zero exit
+status from PGP.
+
+=head1 BUGS
+
+The implementation of pgp_verify() uses temporary files.  Unfortunately,
+given the current implementation of PGP, there isn't any way to avoid
+this, since we want to generate detached signatures.  It would be possible
+to do everything through pipes if we generated attached signatures, but
+then we would have to deal with PGP data munging, which is ugly and
+underdocumented.
 
 =head1 CAVEATS
 
@@ -368,6 +392,13 @@ but I can't be sure about other versions.
 This module forks, uses a pipe, and relies on the ability to pass an open
 pipe to an exec()ed subprocess.  This may cause portability problems to
 certain substandard operating systems.
+
+The signature generated is a detached signature.  If you intend to pass it
+to an application that will attempt to verify it by creating a signed
+document (the way pgpverify does), you'll need to perform all munging to
+the data that PGP would *before* passing that data to pgp_sign() (or while
+passing it to pgp_sign(), using a code reference).  In general, this means
+doing C<s/\s+$//> and C<s/^-/- -/> or their moral equivalents.
 
 =head1 AUTHOR
 
