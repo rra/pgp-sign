@@ -6,7 +6,6 @@
 	* debian/compat: Likewise.
 	* debian/control: Likewise.
 	* debian/copyright: Likewise.
-	* debian/files: Likewise.
 	* debian/rules: Likewise.
 
 	* Makefile.PL: Also remove trustdb.gpg; GnuPG generates it
