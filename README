@@ -1,16 +1,15 @@
-                          PGP::Sign version 0.16
+                          PGP::Sign version 0.17
            (Create and verify detached PGP signatures for data)
 
-  Copyright 1997, 1998, 1999, 2000 by Russ Allbery <rra@stanford.edu>.
+  Copyright 1997, 1998, 1999, 2000, 2002 Russ Allbery <rra@stanford.edu>.
   This program is free software; you may redistribute it and/or modify it
   under the same terms as Perl itself.
 
 
 INTRODUCTION
 
-  One important thing to clear up right away:
-
-                     THIS IS NOT A GENERAL PGP MODULE
+  One important thing to clear up right away:  This is not a general PGP
+  module.
 
   For wonderful general PGP modules that will encrypt, decrypt, manage key
   rings, slice, dice, fold, spindle, and mutilate your data, see the PGP
@@ -75,12 +74,13 @@ REQUIREMENTS
   I've personally tested or received reports of clean tests of this module
   with the following versions of PGP:
 
-        PGP 2.6.2 (US version)
-        PGP 2.6.2i
-        PGP 5.0 (US Linux freeware version)
-        PGP 6.5.2 (US Solaris freeware version)
-        GnuPG 0.9.2 (Linux and Solaris)
-        GnuPG 1.0.1 (Solaris)
+      PGP 2.6.2 (US version)
+      PGP 2.6.2i
+      PGP 5.0 (US Linux freeware version)
+      PGP 6.5.2 (US Solaris freeware version)
+      GnuPG 0.9.2 (Linux and Solaris)
+      GnuPG 1.0.1 (Solaris)
+      GnuPG 1.0.6 (Solaris)
 
   If you successfully use this module with other versions of PGP not
   listed above, please let me know.
@@ -88,7 +88,7 @@ REQUIREMENTS
   This module requires no other modules besides IPC::Open3 and FileHandle,
   both of which are part of Perl core and have been for some time.  It
   should work with Perl 5.003 or later, although I personally have only
-  tested it with Perl 5.004_04 and 5.005_03.
+  tested it with Perl 5.004_04, 5.005_03, and Perl 5.6.1.
 
 
 INSTALLATION
@@ -96,10 +96,10 @@ INSTALLATION
   Follow the standard installation procedure for Perl modules, which is to
   type the following commands:
 
-        perl Makefile.PL
-        make
-        make test
-        make install
+      perl Makefile.PL
+      make
+      make test
+      make install
 
   You'll probably need to do the last as root unless you're installing in
   your own private modules directory.
@@ -133,7 +133,7 @@ INSTALLATION
   If you want to avoid the prompt for the path to PGP, you can, instead of
   the first line, type:
 
-        perl Makefile.PL PGP=/path/to/pgp
+      perl Makefile.PL PGP=/path/to/pgp
 
   and then /path/to/pgp will be used as the path to PGP (both signing and
   verification) and you won't be prompted.  When invoked this way,
@@ -141,12 +141,12 @@ INSTALLATION
   the name of the binaries.  You can set it specifically with something
   like:
 
-        perl Makefile.PL PGP=/usr/local/bin/gpg PGPSTYLE=GPG
+      perl Makefile.PL PGP=/usr/local/bin/gpg PGPSTYLE=GPG
 
   if you need to.  If the signing program and verifying program are
   different, set PGPS and PGPV instead of just PGP.  For example:
 
-        perl Makefile.PL PGPS=/usr/local/bin/pgps PGPV=/usr/local/bin/pgpv
+      perl Makefile.PL PGPS=/usr/local/bin/pgps PGPV=/usr/local/bin/pgpv
 
   If you want to install PGP::Sign in somewhere other than the default
   installation location, you can set PREFIX or LIB on the Makefile.PL
@@ -163,7 +163,7 @@ TESTING
 
   To run the test suite, type:
 
-        make test
+      make test
 
   after running make.  Regardless of your PGP style, at least one test
   will be skipped, since PGP::Sign knows how to test RSA signatures (PGP
@@ -235,7 +235,7 @@ CONTACTING ME AND CONTRIBUTIONS
   dogs named Ralf to rra@stanford.edu.  :)
 
   Please allow at least a month for me to respond to mail regarding this
-  module.  I get at *least* 500 mail messages a day, and I'm afraid this
+  module.  I get at *least* 1,000 mail messages a day, and I'm afraid this
   module is something that I only get a chance to work on once every few
   months.  I do intend to continue to maintain it, however, and I will get
   back to you eventually.
@@ -247,9 +247,3 @@ CONTACTING ME AND CONTRIBUTIONS
   please read TODO first.
 
   Enjoy!
-
--- 
-Russ Allbery <rra@stanford.edu>         <URL:http://www.eyrie.org/~eagle/>
-
-       [  RSA: 32 D7 46 5A D7 BA 0E 5C  5B F0 8A 27 3D B4 30 E3  ]
-       [ DSS: 18CF B0C8 368A 36A8 86F5  66A2 F985 E340 0AFC 7476 ]
