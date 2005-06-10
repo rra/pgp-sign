@@ -1,3 +1,11 @@
+libpgp-sign-perl (0.19-2) unstable; urgency=low
+
+  * Uploaded to Debian.  (Closes: #308429)
+  * Add a watch file.
+  * Use the recommend format for the Homepage link in the description.
+
+ -- Russ Allbery <rra@stanford.edu>  Fri, 10 Jun 2005 15:43:39 -0700
+
 libpgp-sign-perl (0.19-1) unstable; urgency=low
 
   * New upstream release.

@@ -15,5 +15,5 @@ Description: Perl module to create detached PGP signatures
  Secret key passphrases are passed via a pipe, and no temporary files are
  required for signature generation (but are for signature verification).
  .
- For more information, see <http://www.eyrie.org/~eagle/software/pgp-sign/>.
+  Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
 
