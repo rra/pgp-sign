@@ -1,5 +1,6 @@
 libpgp-sign-perl (0.19-3) unstable; urgency=low
 
+  * Update standards version to 3.6.2 (no changes required).
   * Update maintainer address.
 
  --
