@@ -7,7 +7,7 @@ libpgp-sign-perl (0.19-3) unstable; urgency=low
   * Update standards version to 3.6.2 (no changes required).
   * Update maintainer address.
 
- --
+ -- Russ Allbery <rra@debian.org>  Wed, 16 Nov 2005 21:05:52 -0800
 
 libpgp-sign-perl (0.19-2) unstable; urgency=low
 
