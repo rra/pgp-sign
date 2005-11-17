@@ -1,3 +1,9 @@
+libpgp-sign-perl (0.19-3) unstable; urgency=low
+
+  * Update maintainer address.
+
+ --
+
 libpgp-sign-perl (0.19-2) unstable; urgency=low
 
   * Uploaded to Debian.  (Closes: #308429)

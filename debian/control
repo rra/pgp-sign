@@ -3,7 +3,7 @@ Section: perl
 Priority: optional
 Build-Depends: debhelper (>= 4.0.2)
 Build-Depends-Indep: perl (>= 5.8.0-7)
-Maintainer: Russ Allbery <rra@stanford.edu>
+Maintainer: Russ Allbery <rra@debian.org>
 Standards-Version: 3.6.1
 
 Package: libpgp-sign-perl
