@@ -15,34 +15,23 @@
 # always return the default without waiting for user input.
 export PERL_MM_USE_DEFAULT=1
 
-PACKAGE=$(shell dh_listpackages)
-
-ifndef PERL
-PERL = /usr/bin/perl
-endif
-
-TMP     =$(CURDIR)/debian/$(PACKAGE)
-
-# Allow disabling build optimation by setting noopt in
-# $DEB_BUILD_OPTIONS
-CFLAGS = -Wall -g
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-        CFLAGS += -O0
-else
-        CFLAGS += -O2
-endif
+PACKAGE = $(shell dh_listpackages)
+TMP     = $(CURDIR)/debian/$(PACKAGE)
+PERL   ?= /usr/bin/perl
 
 build: build-stamp
 build-stamp:
 	dh_testdir
 	$(PERL) Makefile.PL INSTALLDIRS=vendor PGP=/usr/bin/gpg
-	$(MAKE) OPTIMIZE="$(CFLAGS)"
+	$(MAKE)
 	touch build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	-$(MAKE) distclean
+ifeq (Makefile,$(wildcard Makefile))
+	$(MAKE) distclean
+endif
 	rm -f data/trustdb.gpg
 	dh_clean build-stamp install-stamp
 
@@ -51,12 +40,10 @@ install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean
+	$(MAKE) test
 	$(MAKE) install DESTDIR=$(TMP) PREFIX=/usr
 	rmdir --ignore-fail-on-non-empty --parents $(TMP)/usr/lib/perl5
 	touch install-stamp
-
-binary-arch:
-# We have nothing to do by default.
 
 binary-indep: build install
 	dh_testdir
@@ -73,5 +60,5 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary
+binary: binary-indep
+.PHONY: build clean binary-indep binary

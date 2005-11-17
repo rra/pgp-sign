@@ -1,5 +1,7 @@
 libpgp-sign-perl (0.19-3) unstable; urgency=low
 
+  * Run make test when building the package.
+  * Simplify debian/rules.
   * Update standards version to 3.6.2 (no changes required).
   * Update maintainer address.
 
