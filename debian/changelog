@@ -1,3 +1,10 @@
+libpgp-sign-perl (0.19-4) unstable; urgency=low
+
+  * Providing binary-arch in debian/rules is required by Policy even if
+    there are no arch-dependent packages.  Whoops.
+
+ -- Russ Allbery <rra@debian.org>  Mon,  5 Dec 2005 15:09:47 -0800
+
 libpgp-sign-perl (0.19-3) unstable; urgency=low
 
   * Run make test when building the package.
