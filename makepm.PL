@@ -6,6 +6,9 @@
 # install the module.  While we're at it, we also pull in our version number
 # from a separate file to give us some flexibility in release numbering.
 
+# Unbuffer output, since we'll be prompting.
+$| = 1;
+
 # First, grab the line to set the version number, since we'll need to
 # substitute that in to PGP/Sign.pm when we build it.  It's the second line
 # of VERSION.pm.

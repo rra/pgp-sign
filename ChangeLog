@@ -1,3 +1,7 @@
+2007-04-22  Russ Allbery  <rra@stanford.edu>
+
+	* makepm.PL: Unbuffer output since we're prompting the user.
+
 2004-08-08  Russ Allbery  <rra@stanford.edu>
 
 	* VERSION.pm: PGP::Sign 0.19 released.
