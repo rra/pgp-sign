@@ -80,7 +80,7 @@ print "ok 8\n";
 # Earlier versions do verify it.  This is a disagreement over how to
 # handle trailing whitespace when verifying signatures.
 if ($PGP::Sign::PGPSTYLE eq 'GPG') {
-    print "ok 9 # skip\n";
+    print "ok 9 # skip -- unreliable on GnuPG\n";
 } else {
     $signer = pgp_verify ($signature, $version, @munged);
     print 'not ' if ($signer ne '' || PGP::Sign::pgp_error);
@@ -106,7 +106,7 @@ warn @errors if @errors;
 
 # 12 (check an external PGP 2.6.2 signature, data from glob ref)
 if ($PGP::Sign::PGPSTYLE eq 'GPG') {
-    print "ok 12 # skip\n";
+    print "ok 12 # skip -- GnuPG doesn't have IDEA\n";
 } else {
     if (open (SIG, "$data/message.sig") && open (DATA, "$data/message")) {
         my @signature = <SIG>;
@@ -128,7 +128,7 @@ if ($PGP::Sign::PGPSTYLE eq 'GPG') {
 
 # 13 (check an external version three DSA signature, data from array ref)
 if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
-    print "ok 13 # skip\n";
+    print "ok 13 # skip -- PGP 2 can't verify DSA signatures\n";
 } else {
     if (open (SIG, "$data/message.asc")) {
         my @signature = <SIG>;
@@ -149,7 +149,7 @@ if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
 
 # 14 (check an external version four DSA signature, data from FileHandle)
 if ($PGP::Sign::PGPSTYLE ne 'GPG') {
-    print "ok 14 # skip\n";
+    print "ok 14 # skip -- only GnuPG can verify version 4 signatures\n";
 } else {
     if (open (SIG, "$data/message.asc.v4")) {
         my @signature = <SIG>;

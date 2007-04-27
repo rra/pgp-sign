@@ -53,7 +53,7 @@ print "ok 4\n";
 
 # 5 (check an external PGP 2.6.2 signature, data from glob ref)
 if ($PGP::Sign::PGPSTYLE eq 'GPG') {
-    print "ok 5 # skip\n";
+    print "ok 5 # skip -- GnuPG doesn't have IDEA\n";
 } else {
     if (open (SIG, "$data/message.sig") && open (DATA, "$data/message")) {
         my @signature = <SIG>;
@@ -74,7 +74,7 @@ if ($PGP::Sign::PGPSTYLE eq 'GPG') {
 
 # 6 (check an external version three DSA signature, data from array ref)
 if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
-    print "ok 6 # skip\n";
+    print "ok 6 # skip -- PGP 2 can't check DSA signatures\n";
 } else {
     if (open (SIG, "$data/message.asc")) {
         my @signature = <SIG>;
@@ -94,7 +94,7 @@ if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
 
 # 7 (check an external version four DSA signature, data from FileHandle)
 if ($PGP::Sign::PGPSTYLE ne 'GPG') {
-    print "ok 7 # skip\n";
+    print "ok 7 # skip -- only GnuPG can verify version 4 signatures\n";
 } else {
     if (open (SIG, "$data/message.asc.v4")) {
         my @signature = <SIG>;
