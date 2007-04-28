@@ -19,7 +19,9 @@ PACKAGE = $(shell dh_listpackages)
 TMP     = $(CURDIR)/debian/$(PACKAGE)
 PERL   ?= /usr/bin/perl
 
-build: build-stamp
+build: build-arch build-indep
+build-arch:
+build-indep: build-stamp
 build-stamp:
 	dh_testdir
 	$(PERL) Makefile.PL INSTALLDIRS=vendor PGP=/usr/bin/gpg
@@ -29,11 +31,10 @@ build-stamp:
 clean:
 	dh_testdir
 	dh_testroot
-ifeq (Makefile,$(wildcard Makefile))
-	$(MAKE) distclean
-endif
+	rm -f build-stamp install-stamp
+	[ ! -f Makefile ] || $(MAKE) distclean
 	rm -f data/trustdb.gpg
-	dh_clean build-stamp install-stamp
+	dh_clean
 
 install: install-stamp
 install-stamp: build-stamp
@@ -45,7 +46,9 @@ install-stamp: build-stamp
 	rmdir --ignore-fail-on-non-empty --parents $(TMP)/usr/lib/perl5
 	touch install-stamp
 
-binary-indep: build install
+binary: binary-arch binary-indep
+binary-arch:
+binary-indep: build-stamp install-stamp
 	dh_testdir
 	dh_testroot
 	dh_installdocs README TODO
@@ -60,6 +63,5 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
-binary-arch:
-binary: binary-arch binary-indep
-.PHONY: build clean binary-arch binary-indep binary
+.PHONY: binary binary-arch binary-indep build build-arch build-indep clean
+.PHONY: install

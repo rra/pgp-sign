@@ -1,3 +1,14 @@
+libpgp-sign-perl (0.20-1) unstable; urgency=low
+
+  * New upstream version.
+  * Use a better way of running make distclean.
+  * Remove stamp files at the start of the clean rule.
+  * Add build-arch and build-indep targets, just in case.
+  * Update standards version to 3.7.2 (no changes required).
+  * Update debhelper compatibility level to V5.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 27 Apr 2007 21:04:51 -0700
+
 libpgp-sign-perl (0.19-4) unstable; urgency=low
 
   * Providing binary-arch in debian/rules is required by Policy even if

@@ -1,10 +1,10 @@
 Source: libpgp-sign-perl
 Section: perl
 Priority: optional
-Build-Depends: debhelper (>= 4.0.2)
+Build-Depends: debhelper (>= 45)
 Build-Depends-Indep: perl (>= 5.8.0-7), gnupg
 Maintainer: Russ Allbery <rra@debian.org>
-Standards-Version: 3.6.2
+Standards-Version: 3.7.2
 
 Package: libpgp-sign-perl
 Architecture: all
