@@ -1,3 +1,12 @@
+2007-04-27  Russ Allbery  <rra@stanford.edu>
+
+	* VERSION.pm: PGP::Sign 0.20 released.
+
+	* t/basic.t: Add reasons for the skipped tests.
+	* t/locale.t: Likewise.
+
+	* t/pod.t: New check for POD formatting.
+
 2007-04-22  Russ Allbery  <rra@stanford.edu>
 
 	* makepm.PL: Unbuffer output since we're prompting the user.

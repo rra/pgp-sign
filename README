@@ -1,10 +1,9 @@
-                          PGP::Sign version 0.19
+                          PGP::Sign version 0.20
            (Create and verify detached PGP signatures for data)
 
-  Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery
+  Copyright 1997, 1998, 1999, 2000, 2002, 2004, 2007 Russ Allbery
   <rra@stanford.edu>.  This program is free software; you may redistribute
   it and/or modify it under the same terms as Perl itself.
-
 
 INTRODUCTION
 
@@ -58,7 +57,6 @@ INTRODUCTION
   See the documentation for all the gory details, which really aren't that
   gory.  At least yet.
 
-
 REQUIREMENTS
 
   This module requires a version of PGP that supports PGPPASSFD or some
@@ -84,6 +82,7 @@ REQUIREMENTS
       GnuPG 1.2.1 (Linux)
       GnuPG 1.2.2 (FreeBSD and OpenBSD)
       GnuPG 1.2.4 (Linux)
+      GnuPG 1.4.6 (Linux)
 
   If you successfully use this module with another significant version of
   PGP not listed above, please let me know.
@@ -91,8 +90,7 @@ REQUIREMENTS
   This module requires no other modules besides IPC::Open3 and FileHandle,
   both of which are part of Perl core and have been for some time.  It
   should work with Perl 5.003 or later, although I personally have only
-  tested it with Perl 5.004_04, 5.005_03, 5.6.1, 5.8.0, and 5.8.4.
-
+  tested it with Perl 5.004_04, 5.005_03, 5.6.1, 5.8.0, 5.8.4, and 5.8.8.
 
 INSTALLATION
 
@@ -156,7 +154,6 @@ INSTALLATION
   command line.  See the ExtUtils::MakeMaker documentation for more
   details.
 
-
 TESTING
 
   There is a small test suite that uses the files in data to make sure
@@ -188,7 +185,6 @@ TESTING
 
   More tests are welcome, particularly if you find a bug or if they test
   some major functionality of this module not currently covered.
-
 
 THANKS
 
@@ -231,7 +227,6 @@ THANKS
   implementation I've worked with and is free to boot, and for pointing me
   at the right sections of RFC 2440 to explain the OpenPGP standard on
   whitespace munging in text signatures.
-
 
 CONTACTING ME AND CONTRIBUTIONS
 
