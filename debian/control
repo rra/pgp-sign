@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper (>= 5)
 Build-Depends-Indep: perl (>= 5.8.0-7), gnupg
 Maintainer: Russ Allbery <rra@debian.org>
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
 
 Package: libpgp-sign-perl
