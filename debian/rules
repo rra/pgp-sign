@@ -24,7 +24,9 @@ build-arch:
 build-indep: build-stamp
 build-stamp:
 	dh_testdir
-	$(PERL) Makefile.PL INSTALLDIRS=vendor PGP=/usr/bin/gpg
+	$(PERL) Makefile.PL PGP=/usr/bin/gpg INSTALLDIRS=vendor \
+	    INSTALLVENDORARCH=/usr/share/perl5/ \
+	    VENDORARCHEXP=/usr/share/perl5/
 	$(MAKE)
 	touch build-stamp
 
@@ -43,7 +45,6 @@ install-stamp: build-stamp
 	dh_clean
 	$(MAKE) test
 	$(MAKE) install DESTDIR=$(TMP) PREFIX=/usr
-	rmdir --ignore-fail-on-non-empty --parents $(TMP)/usr/lib/perl5
 	touch install-stamp
 
 binary: binary-arch binary-indep
