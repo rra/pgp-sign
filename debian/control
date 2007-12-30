@@ -5,6 +5,7 @@ Build-Depends: debhelper (>= 5)
 Build-Depends-Indep: perl (>= 5.8.0-7), gnupg
 Maintainer: Russ Allbery <rra@debian.org>
 Standards-Version: 3.7.2
+Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
 
 Package: libpgp-sign-perl
 Architecture: all
@@ -14,6 +15,3 @@ Description: Perl module to create detached PGP signatures
  Other PGP implementations are also supported with run-time configuration.
  Secret key passphrases are passed via a pipe, and no temporary files are
  required for signature generation (but are for signature verification).
- .
-  Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
-
