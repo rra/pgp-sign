@@ -1,11 +1,11 @@
-libpgp-sign-perl (0.20-2) UNRELEASED; urgency=low
+libpgp-sign-perl (0.20-2) unstable; urgency=low
 
   * Tell Makefile.PL not to create /usr/lib/perl5 and remove the rmdir,
     which fails with Perl 5.10.
   * Move Homepage into a real control header.
   * Update standards version to 3.7.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sat, 29 Dec 2007 16:09:16 -0800
+ -- Russ Allbery <rra@debian.org>  Sat, 29 Dec 2007 16:11:50 -0800
 
 libpgp-sign-perl (0.20-1) unstable; urgency=low
 
