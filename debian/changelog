@@ -1,3 +1,10 @@
+libpgp-sign-perl (0.20-3) UNRELEASED; urgency=low
+
+  * Use a better way of removing empty directories created by
+    ExtUtils::MakeMaker.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 18 Feb 2008 12:42:38 -0800
+
 libpgp-sign-perl (0.20-2) unstable; urgency=low
 
   * Tell Makefile.PL not to create /usr/lib/perl5 and remove the rmdir,
