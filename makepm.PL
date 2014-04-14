@@ -1,5 +1,4 @@
 # makepm.PL -- Builds PGP/Sign.pm from PGP/Sign.in.  -*- perl -*-
-# $Id$
 #
 # The main reason why we have this script is to figure out where PGP is on
 # the system and code that and the PGP style to use into PGP::Sign before we

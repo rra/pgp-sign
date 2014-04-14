@@ -1,5 +1,4 @@
 # locale.t -- Test for PGP::Sign in the presence of locale.  -*- perl -*-
-# $Id$
 
 # Set the locale.  I use French for testing; this won't be a proper test
 # unless the locale is available on the local system, so hopefully this will
