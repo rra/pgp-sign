@@ -2,7 +2,7 @@
            (Create and verify detached PGP signatures for data)
 
   Copyright 1997, 1998, 1999, 2000, 2002, 2004, 2007 Russ Allbery
-  <rra@stanford.edu>.  This program is free software; you may redistribute
+  <rra@cpan.org>.  This program is free software; you may redistribute
   it and/or modify it under the same terms as Perl itself.
 
 INTRODUCTION
@@ -232,7 +232,7 @@ CONTACTING ME AND CONTRIBUTIONS
 
   Send any comments, bug reports, feature requests, flames, thank yous,
   offers of vast quantities of money, lutefisk, and large green Martian
-  dogs named Ralf to rra@stanford.edu.  :)
+  dogs named Ralf to rra@cpan.org.  :)
 
   Please allow at least a month for me to respond to mail regarding this
   module.  I get at *least* 1,000 mail messages a day, and I'm afraid this

@@ -4,7 +4,7 @@ Here's a list of things that have occurred to me that I'd like to see
 added to PGP::Sign at some point, in no particular order.  As this is a
 module I can only work on in my free time, I won't get to implementing any
 of these things as quickly as I'd like.  If you're interested in doing any
-of these, send me mail at rra@stanford.edu to let me know and then have at
+of these, send me mail at rra@cpan.org to let me know and then have at
 it!  Patches gratefully accepted and will be noted in the README.
 Additions to this file are also welcome.
 

@@ -1,7 +1,7 @@
 # PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
 # $Id$
 #
-# Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery <rra@stanford.edu>
+# Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -358,15 +358,15 @@ sub pgp_verify {
     # Partly from pgpverify, by David Lawrence <tale@isc.org>:
     #
     # MIT PGP 2.6.2 and PGP 6.5.2:
-    #   Good signature from user "Russ Allbery <rra@stanford.edu>".
+    #   Good signature from user "Russ Allbery <rra@cpan.org>".
     # ViaCrypt PGP 4.0:
-    #   Good signature from user:  Russ Allbery <rra@stanford.edu>
+    #   Good signature from user:  Russ Allbery <rra@cpan.org>
     # PGP 5.0:
     #   Good signature made 1999-02-10 03:29 GMT by key:
     #     1024 bits, Key ID 0AFC7476, Created 1999-02-10
-    #      "Russ Allbery <rra@stanford.edu>"
+    #      "Russ Allbery <rra@cpan.org>"
     # GPG 1.0.1 (and 0.9.2):
-    #   gpg: Good signature from "Russ Allbery <rra@stanford.edu>"
+    #   gpg: Good signature from "Russ Allbery <rra@cpan.org>"
     #
     # Also, PGP v2 prints out "Bad signature" while PGP v5 uses "BAD
     # signature" and PGP v6 reverts back to "Bad signature".
@@ -666,12 +666,12 @@ L<http://www.eyrie.org/~eagle/software/pgp-sign/>.
 
 =head1 AUTHOR
 
-Russ Allbery <rra@stanford.edu>
+Russ Allbery <rra@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
 Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery
-<rra@stanford.edu>.
+<rra@cpan.org>.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

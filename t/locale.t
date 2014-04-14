@@ -62,7 +62,7 @@ if ($PGP::Sign::PGPSTYLE eq 'GPG') {
         $signer = pgp_verify ($signature, undef, \*DATA);
         close DATA;
         @errors = PGP::Sign::pgp_error;
-        if ($signer ne 'R. Russell Allbery <rra@stanford.edu>'
+        if ($signer ne 'R. Russell Allbery <rra@cpan.org>'
             || PGP::Sign::pgp_error) {
             print 'not ';
         }
@@ -82,7 +82,7 @@ if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
         $signature = join ('', @signature[4..6]);
         $signer = pgp_verify ($signature, undef, \@data);
         @errors = PGP::Sign::pgp_error;
-        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
+        if ($signer ne 'Russ Allbery <rra@cpan.org>'
             || PGP::Sign::pgp_error) {
             print 'not ';
         }
@@ -106,7 +106,7 @@ if ($PGP::Sign::PGPSTYLE ne 'GPG') {
             $signer = pgp_verify ($signature, undef, $fh);
             @errors = PGP::Sign::pgp_error;
         }
-        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
+        if ($signer ne 'Russ Allbery <rra@cpan.org>'
             || PGP::Sign::pgp_error) {
             print 'not ';
         }

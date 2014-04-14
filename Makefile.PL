@@ -66,7 +66,7 @@ WriteMakefile (
     DISTNAME     => 'PGP-Sign',
     ($] >= 5.005 ?
      (ABSTRACT   => 'Create and verify PGP/GnuPG signatures, securely',
-      AUTHOR     => 'Russ Allbery (rra@stanford.edu)') : ()),
+      AUTHOR     => 'Russ Allbery (rra@cpan.org)') : ()),
     PL_FILES     => { 'makepm.PL' => 'Sign.pm' },
     PM           => { 'Sign.pm' => '$(INST_LIBDIR)/Sign.pm' },
     VERSION_FROM => 'VERSION.pm',

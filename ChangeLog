@@ -1,4 +1,4 @@
-2007-04-27  Russ Allbery  <rra@stanford.edu>
+2007-04-27  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.20 released.
 
@@ -7,11 +7,11 @@
 
 	* t/pod.t: New check for POD formatting.
 
-2007-04-22  Russ Allbery  <rra@stanford.edu>
+2007-04-22  Russ Allbery  <rra@cpan.org>
 
 	* makepm.PL: Unbuffer output since we're prompting the user.
 
-2004-08-08  Russ Allbery  <rra@stanford.edu>
+2004-08-08  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.19 released.
 
@@ -29,7 +29,7 @@
 	locale.  Documented limitations in the error reporting and
 	recommended setting TMPDIR.
 
-2004-08-04  Russ Allbery  <rra@stanford.edu>
+2004-08-04  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.18 released.
 
@@ -44,7 +44,7 @@
 	of interest.
 	* data/trustdb.gpg: Delete.
 
-2002-06-28  Russ Allbery  <rra@stanford.edu>
+2002-06-28  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.17 released.
 
@@ -53,7 +53,7 @@
 	module's web site.  Add a COPYRIGHT AND LICENSE section.  Update
 	the markup in the documentation.
 
-2000-10-08  Russ Allbery  <rra@stanford.edu>
+2000-10-08  Russ Allbery  <rra@cpan.org>
 
 	* test.pl: Skip test 9 completely under GnuPG, as the whitespace
 	behavior changes from release to release; GnuPG 1.0.2 is back to
@@ -61,7 +61,7 @@
 
 	* Makefile.PL: Added random_seed to @clean, created by GnuPG 1.0.2.
 
-2000-02-12  Russ Allbery  <rra@stanford.edu>
+2000-02-12  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.16 released.
 
@@ -77,13 +77,13 @@
 	support for PGP 6.5.2 and for the change to GnuPG so that it does
 	the same whitespace munging as PGP.
 
-2000-02-06  Russ Allbery  <rra@stanford.edu>
+2000-02-06  Russ Allbery  <rra@cpan.org>
 
 	* test.pl: The signature in test 9 now expected to fail on all
 	versions of PGP, as the release GnuPG was changed to follow PGP in
 	its handling of whitespace.
 
-1999-06-13  Russ Allbery  <rra@stanford.edu>
+1999-06-13  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.15 released.
 
@@ -97,7 +97,7 @@
 
 	* makepm.PL: Sign.in and Sign.pm moved to the root directory.
 
-1999-02-10  Russ Allbery  <rra@stanford.edu>
+1999-02-10  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.14 released.
 
@@ -116,7 +116,7 @@
 	rather than the command line.  Ugly hack to fix Makefile
 	dependencies removed, since it's no longer necessary.
 
-1999-02-09  Russ Allbery  <rra@stanford.edu>
+1999-02-09  Russ Allbery  <rra@cpan.org>
 
 	* test.pl: Changed the testing key ID to "testing", added special
 	casing on PGPSTYLE for testing signatures of whitespace-munged
@@ -153,7 +153,7 @@
 	GPG requires at least five characters in the key ID.
 	data/secring.pgp: Likewise.
 
-1998-12-04  Russ Allbery  <rra@stanford.edu>
+1998-12-04  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.13 released.
 
@@ -166,14 +166,14 @@
 	* makepm.PL: Add support for accepting the path to PGP on the
 	command line (and not prompting in that case).
 
-1998-12-02  Russ Allbery  <rra@stanford.edu>
+1998-12-02  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.12 released.
 
 	* makepm.PL: The path to PGP that the user inputs should override
 	any other path to PGP that we find.
 
-1998-11-27  Russ Allbery  <rra@stanford.edu>
+1998-11-27  Russ Allbery  <rra@cpan.org>
 
 	* VERSION.pm: PGP::Sign 0.11 released.
 
@@ -181,7 +181,7 @@
 	from generating a PGP::PGP::Sign man page, changed the formatting
 	of the 5.005-only section.
 
-1998-11-26  Russ Allbery  <rra@stanford.edu>
+1998-11-26  Russ Allbery  <rra@cpan.org>
 
 	* Makefile.PL: Added ABSTRACT and AUTHOR for Perl versions 5.005
 	and higher.  This is for the PPD to go with a binary distribution,
@@ -218,7 +218,7 @@
 	* data/pubring.pgp: New file.
 	* data/secring.pgp: New file.
 
-1998-07-05  Russ Allbery  <rra@stanford.edu>
+1998-07-05  Russ Allbery  <rra@cpan.org>
 
 	* Sign.pm: PGP::Sign 0.9 released.
 
@@ -228,7 +228,7 @@
 	things up a little and explicitly set $/ in case our calling
 	program had it set to something odd.
 
-1997-08-18  Russ Allbery  <rra@stanford.edu>
+1997-08-18  Russ Allbery  <rra@cpan.org>
 
 	* Sign.pm: PGP::Sign 0.8 released.
 	
@@ -236,7 +236,7 @@
 	umask on completion) since we're creating temporary files.
 	(pgp_sign): Added a check to see if we got a signature at all.
 
-1997-08-15  Russ Allbery  <rra@stanford.edu>
+1997-08-15  Russ Allbery  <rra@cpan.org>
 
 	* Sign.pm: PGP::Sign 0.7 released.
 
@@ -250,7 +250,7 @@
 	rather than printing it directly, added documentation of the new
 	behavior to the PODs.
 
-1997-07-29  Russ Allbery  <rra@stanford.edu>
+1997-07-29  Russ Allbery  <rra@cpan.org>
 
 	* Sign.pm: Removed $ORS, which was a hack that we don't need any
 	more.  That work should be done by the client, and the client is
@@ -262,7 +262,7 @@
 	to create temporary files.  Changed the documentation to include
 	notes about all of this.
 
-1997-07-27  Russ Allbery  <rra@stanford.edu>
+1997-07-27  Russ Allbery  <rra@cpan.org>
 
 	* Sign.pm: Broke write_data() off into a separate function, added
 	pgp_verify() and tested it, changed the documentation to mention
