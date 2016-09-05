@@ -6,8 +6,10 @@ Build-Depends:
  gnupg1,
  perl,
 Maintainer: Russ Allbery <rra@debian.org>
-Standards-Version: 3.7.3
+Standards-Version: 3.9.8
 Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
+Vcs-Git: https://git.eyrie.org/git/perl/pgp-sign.git -b debian/master
+Vcs-Browser: https://git.eyrie.org/?p=perl/pgp-sign.git
 
 Package: libpgp-sign-perl
 Architecture: all

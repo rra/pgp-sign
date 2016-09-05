@@ -1,22 +1,15 @@
-Debian package by Russ Allbery <rra@debian.org>                 2004-08-04
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Contact: Russ Allbery <rra@cpan.org>
+Source: http://www.eyrie.org/~eagle/software/pgp-sign/
 
-It was downloaded from:
-
-    <http://www.eyrie.org/~eagle/software/pgp-sign/>
-
-Debian packaging copyright:
-
-    All Debian packaging files are covered under the same copyright as the
-    upstream source.
-
-Copyright:
-
-    Copyright 1997, 1998, 1999, 2000, 2002, 2004, 2007 Russ Allbery
-    <rra@stanford.edu>.  This program is free software; you may
-    redistribute it and/or modify it under the same terms as Perl itself.
-
-Perl is distributed under either the Artistic License or the GNU General
-Public License.  The full text of the GNU General Public License is
-available in Debian systems in /usr/share/common-licenses/GPL.  The full
-text of the Artistic License is available on Debian systems in
-/usr/share/common-licenses/Artistic.
+Files: *
+Copyright: 1997-2000, 2002, 2004, 2007, 2008, 2016 Russ Allbery <rra@cpan.org>
+License: Perl
+ This program is free software; you may redistribute it and/or modify it
+ under the same terms as Perl itself.  This means that you may choose
+ between the two licenses that Perl is released under:  the GNU GPL and the
+ Artistic License.  Please see your Perl distribution for the details and
+ copies of the licenses.
+Comment: You can find the GPL version 1 in
+ /usr/share/common-licenses/GPL-1 and the Artistic License in
+ /usr/share/common-licenses/Artistic on Debian systems.
