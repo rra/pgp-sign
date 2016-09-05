@@ -12,6 +12,7 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
   * Remove versioned dependency on Perl that's way older than oldstable.
   * Add debian/gbp.conf reflecting the branch layout of the default
     packaging repository.
+  * Run wrap-and-sort -ast on the packaging files.
 
  -- Russ Allbery <rra@debian.org>  Mon, 05 Sep 2016 11:21:36 -0700
 
