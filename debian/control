@@ -9,7 +9,7 @@ Homepage: http://www.eyrie.org/~eagle/software/pgp-sign/
 
 Package: libpgp-sign-perl
 Architecture: all
-Depends: ${perl:Depends}, gnupg1
+Depends: ${perl:Depends}, ${misc:Depends}, gnupg1
 Description: Perl module to create detached PGP signatures
  Creates and checks detached PGP signatures for textual data using GnuPG.
  Other PGP implementations are also supported with run-time configuration.
