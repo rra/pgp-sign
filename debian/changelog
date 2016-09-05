@@ -11,6 +11,7 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
     - Convert debian/copyright to copyright-format 1.0.
     - Reference GPL v1 (due to Perl license) instead of the symlink.
     - Add Vcs-Git and Vcs-Browser control fields.
+  * Switch to Debian source package format 3.0 (quilt).
   * Add module name to the package long description.
   * Merge Build-Depends-Indep into Build-Depends, since this distinction
     is not useful when only building Architecture: all packages.
