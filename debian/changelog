@@ -24,6 +24,7 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
     packaging repository.
   * Run wrap-and-sort -ast on the packaging files.
   * Use https for the Homepage URL.
+  * Add signature verification to debian/watch and update the URL.
 
  -- Russ Allbery <rra@debian.org>  Mon, 05 Sep 2016 11:21:36 -0700
 
