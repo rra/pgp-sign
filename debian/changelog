@@ -1,4 +1,4 @@
-libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
+libpgp-sign-perl (0.20-4) unstable; urgency=medium
 
   * Upstream doesn't (yet) work with GnuPG v2, so pin the dependencies at
     GnuPG v1 for now and force use of gpg1 as the signing and verification
@@ -26,7 +26,7 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
   * Use https for the Homepage URL.
   * Add signature verification to debian/watch and update the URL.
 
- -- Russ Allbery <rra@debian.org>  Mon, 05 Sep 2016 11:21:36 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 05 Sep 2016 12:04:46 -0700
 
 libpgp-sign-perl (0.20-3) unstable; urgency=low
 
