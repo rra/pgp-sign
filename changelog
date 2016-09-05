@@ -1,0 +1,96 @@
+libpgp-sign-perl (0.20-4) unstable; urgency=medium
+
+  * Upstream doesn't (yet) work with GnuPG v2, so pin the dependencies at
+    GnuPG v1 for now and force use of gpg1 as the signing and verification
+    program.  (Closes: #835773)
+  * Sync packaging with the orig tarball currently in Debian.  This is a
+    bit of a mess at the moment (the orig tarball in Debian contains a lot
+    of stuff it shouldn't and is missing some files), but none of the
+    problems should matter for the Debian build.  This will be cleaned up
+    properly with the next upstream release.
+  * Update to debhelper compatibility level V9.
+    - Use debhelper rule minimization.
+    - Add ${misc:Depends} dependency.
+  * Update standards version to 3.9.8.
+    - Remove ancient, formerly-required versioned dependency on Perl.
+    - Convert debian/copyright to copyright-format 1.0.
+    - Reference GPL v1 (due to Perl license) instead of the symlink.
+    - Add Vcs-Git and Vcs-Browser control fields.
+  * Switch to Debian source package format 3.0 (quilt).
+  * Add module name to the package long description.
+  * Merge Build-Depends-Indep into Build-Depends, since this distinction
+    is not useful when only building Architecture: all packages.
+  * Add debian/gbp.conf reflecting the branch layout of the default
+    packaging repository.
+  * Run wrap-and-sort -ast on the packaging files.
+  * Use https for the Homepage URL.
+  * Add signature verification to debian/watch and update the URL.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 05 Sep 2016 12:04:46 -0700
+
+libpgp-sign-perl (0.20-3) unstable; urgency=low
+
+  * Use a better way of removing empty directories created by
+    ExtUtils::MakeMaker.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 18 Feb 2008 12:46:56 -0800
+
+libpgp-sign-perl (0.20-2) unstable; urgency=low
+
+  * Tell Makefile.PL not to create /usr/lib/perl5 and remove the rmdir,
+    which fails with Perl 5.10.
+  * Move Homepage into a real control header.
+  * Update standards version to 3.7.3 (no changes required).
+
+ -- Russ Allbery <rra@debian.org>  Sat, 29 Dec 2007 16:11:50 -0800
+
+libpgp-sign-perl (0.20-1) unstable; urgency=low
+
+  * New upstream version.
+  * Use a better way of running make distclean.
+  * Remove stamp files at the start of the clean rule.
+  * Add build-arch and build-indep targets, just in case.
+  * Update standards version to 3.7.2 (no changes required).
+  * Update debhelper compatibility level to V5.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 27 Apr 2007 21:04:51 -0700
+
+libpgp-sign-perl (0.19-4) unstable; urgency=low
+
+  * Providing binary-arch in debian/rules is required by Policy even if
+    there are no arch-dependent packages.  Whoops.
+
+ -- Russ Allbery <rra@debian.org>  Mon,  5 Dec 2005 15:09:47 -0800
+
+libpgp-sign-perl (0.19-3) unstable; urgency=low
+
+  * Run make test when building the package.
+  * Simplify debian/rules.
+  * Update copyright to my current format and add an explicit packaging
+    copyright and license statement.
+  * Update standards version to 3.6.2 (no changes required).
+  * Update maintainer address.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 16 Nov 2005 21:05:52 -0800
+
+libpgp-sign-perl (0.19-2) unstable; urgency=low
+
+  * Uploaded to Debian.  (Closes: #308429)
+  * Add a watch file.
+  * Use the recommend format for the Homepage link in the description.
+
+ -- Russ Allbery <rra@stanford.edu>  Fri, 10 Jun 2005 15:43:39 -0700
+
+libpgp-sign-perl (0.19-1) unstable; urgency=low
+
+  * New upstream release.
+    - Use --status-fd with GnuPG.  Fixes pgp_verify in non-English locales.
+
+ -- Russ Allbery <rra@stanford.edu>  Sun,  8 Aug 2004 02:57:42 -0700
+
+libpgp-sign-perl (0.18-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Russ Allbery <rra@stanford.edu>  Wed,  4 Aug 2004 22:26:31 -0700
+
