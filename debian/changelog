@@ -7,6 +7,9 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
     - Use debhelper rule minimization.
     - Add ${misc:Depends} dependency.
   * Add module name to the package long description.
+  * Merge Build-Depends-Indep into Build-Depends, since this distinction
+    is not useful when only building Architecture: all packages.
+  * Remove versioned dependency on Perl that's way older than oldstable.
   * Add debian/gbp.conf reflecting the branch layout of the default
     packaging repository.
 
