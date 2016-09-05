@@ -1,5 +1,5 @@
 # basic.t -- Basic tests for PGP::Sign functionality.  -*- perl -*-
-# $Id$
+# $Id: basic.t 173 2007-04-27 23:51:24Z eagle $
 
 # Locate our test data directory for later use.
 my $data;

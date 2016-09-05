@@ -1,5 +1,5 @@
 # Makefile.PL for PGP::Sign module  -*- perl -*-
-# $Id$
+# $Id: Makefile.PL 145 2004-08-05 05:27:39Z eagle $
 use ExtUtils::MakeMaker;
 
 # The build process for PGP::Sign normally will attempt to find programs to

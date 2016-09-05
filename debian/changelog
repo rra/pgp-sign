@@ -3,6 +3,11 @@ libpgp-sign-perl (0.20-4) UNRELEASED; urgency=medium
   * Upstream doesn't (yet) work with GnuPG v2, so pin the dependencies at
     GnuPG v1 for now and force use of gpg1 as the signing and verification
     program.  (Closes: #835773)
+  * Sync packaging with the orig tarball currently in Debian.  This is a
+    bit of a mess at the moment (the orig tarball in Debian contains a lot
+    of stuff it shouldn't and is missing some files), but none of the
+    problems should matter for the Debian build.  This will be cleaned up
+    properly with the next upstream release.
   * Update to debhelper compatibility level V9.
     - Use debhelper rule minimization.
     - Add ${misc:Depends} dependency.

@@ -1,5 +1,5 @@
 # PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
-# $Id$
+# $Id: Sign.in 158 2004-08-08 09:42:35Z eagle $
 #
 # Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery <rra@stanford.edu>
 #
