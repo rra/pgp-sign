@@ -135,7 +135,7 @@ if ($PGP::Sign::PGPSTYLE eq 'PGP2') {
         $signature = join ('', @signature[4..6]);
         $signer = pgp_verify ($signature, undef, \@data);
         @errors = PGP::Sign::pgp_error;
-        if ($signer ne 'Russ Allbery <rra@cpan.org>'
+        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
             || PGP::Sign::pgp_error) {
             print "# Saw '$signer'\n";
             print 'not ';
@@ -160,7 +160,7 @@ if ($PGP::Sign::PGPSTYLE ne 'GPG') {
             $signer = pgp_verify ($signature, undef, $fh);
             @errors = PGP::Sign::pgp_error;
         }
-        if ($signer ne 'Russ Allbery <rra@cpan.org>'
+        if ($signer ne 'Russ Allbery <rra@stanford.edu>'
             || PGP::Sign::pgp_error) {
             print "# Saw '$signer'\n";
             print 'not ';
