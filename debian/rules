@@ -24,7 +24,7 @@ build-arch:
 build-indep: build-stamp
 build-stamp:
 	dh_testdir
-	$(PERL) Makefile.PL PGP=/usr/bin/gpg INSTALLDIRS=vendor
+	$(PERL) Makefile.PL PGP=/usr/bin/gpg1 INSTALLDIRS=vendor
 	$(MAKE)
 	touch build-stamp
 
