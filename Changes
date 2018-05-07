@@ -1,5 +1,16 @@
                       User-Visible PGP::Sign Changes
 
+PGP::Sign 1.00 (unreleased)
+
+    Rewrite the build system to use Module::Build.  This eliminates the
+    spurious VERSION.pm "module" at the top level, which was a hack for
+    setting the distribution version in old versions of
+    ExtUtils::MakeMaker and should improve the indexing of the module.
+    Move the module into a lib structure and the test suite data into
+    t/data.  Eliminate all of the prompting and command-line parameters to
+    set the PGP style and path to programs; this will instead be
+    discovered or configured at runtime.
+
 PGP::Sign 0.20 (2007-04-27)
 
     Unbuffer output when building the module since there is an interactive

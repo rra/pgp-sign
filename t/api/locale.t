@@ -6,9 +6,7 @@
 $ENV{LC_ALL} = 'fr_FR';
 
 # Locate our test data directory for later use.
-my $data;
-for (qw(./data ../data)) { $data = $_ if -d $_ }
-unless ($data) { die "Cannot find PGP data directory\n" }
+my $data = 't/data';
 $PGP::Sign::PGPPATH = $data;
 
 # Open and load our data file.  This is the sample data that we'll be

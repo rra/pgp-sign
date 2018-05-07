@@ -1,6 +1,6 @@
 # PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
 #
-# Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery <rra@cpan.org>
+# Copyright 1997-2000, 2002, 2004, 2018 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -38,9 +38,8 @@ use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
 @EXPORT    = qw(pgp_sign pgp_verify);
 @EXPORT_OK = qw(pgp_error);
 
-# The current PGP::Sign version number, which is not the same as the CVS
-# revision of this file.  Picked up during build time.
-# @@ VERSION
+# The current PGP::Sign version number.
+$VERSION = '0.20';
 
 ##############################################################################
 # Global variables
@@ -54,10 +53,9 @@ use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
 $MUNGE = 0;
 
 # The default path to PGP.  PGPS is for signing, PGPV is for verifying (with
-# PGP v5 these are two different commands).  This is picked up at install
-# time.
-# @@ PGPS
-# @@ PGPV
+# PGP v5 these are two different commands).
+$PGPS = '/usr/bin/gpg1';
+$PGPV = '/usr/bin/gpg1';
 
 # The path to the directory containing the key ring.  If not set, PGP (v2, v5,
 # or v6) defaults to $ENV{PGPPATH} or $HOME/.pgp.  GPG defaults to
@@ -67,7 +65,7 @@ $PGPPATH = '';
 
 # What style of PGP invocation to use by default.  Allowable values are PGP2,
 # PGP5, PGP6, and GPG.  This is picked up at install time.
-# @@ PGPSTYLE
+$PGPSTYLE = 'GPG';
 
 # The directory in which temporary files should be created.
 $TMPDIR = $ENV{TMPDIR} || '/tmp';
