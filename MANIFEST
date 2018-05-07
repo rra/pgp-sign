@@ -1,4 +1,5 @@
-ChangeLog
+.gitignore
+Changes
 data/message
 data/message.asc
 data/message.asc.v4
@@ -9,18 +10,15 @@ data/pubring.pkr
 data/secring.gpg
 data/secring.pgp
 data/secring.skr
-debian/changelog
-debian/compat
-debian/control
-debian/copyright
-debian/rules
 Makefile.PL
 makepm.PL
 MANIFEST			This list of files
-META.yml			Module meta-data (added by MakeMaker)
+MANIFEST.SKIP
+META.yml
 README
 Sign.in
 t/basic.t
 t/locale.t
+t/pod.t
 TODO
 VERSION.pm
