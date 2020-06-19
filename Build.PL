@@ -25,7 +25,7 @@ my $build = Module::Build->new(
     recursive_test_files => 1,
 
     # Other package relationships.
-    configure_requires => { 'Module::Build' => 0.28    },
+    configure_requires => { 'Module::Build' => 0.28 },
     requires           => {
         'IPC::Run' => 0,
         'perl'     => '5.010',
