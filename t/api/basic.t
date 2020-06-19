@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use IO::File;
-use Test::More tests => 26;
+use Test::More tests => 18;
 
 BEGIN { use_ok('PGP::Sign'); }
 
@@ -50,46 +50,11 @@ is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 is(pgp_verify($signature, $version, @data, 'xyzzy'), q{}, 'Verify invalid');
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
-# Create a version of the data with whitespace at the end of each line and
-# then generate a signature with munging enabled.
-my @whitespace = @data;
-for my $line (@whitespace) {
-    $line =~ s{\n}{ \n}xms;
-}
-{
-    local $PGP::Sign::MUNGE = 1;
-    ($signature, $version) = pgp_sign($keyid, $passphrase, @whitespace);
-}
-isnt($signature, undef, 'Signature of munged data');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
-
-# This signature should be over the same content as @data, so should verify
-# when given @data as the message.
-is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
-
-# This signature should also verify when mugning of the data is enabled.
-{
-    local $PGP::Sign::MUNGE = 1;
-    my $signer = pgp_verify($signature, $version, @whitespace);
-    is($signer, $keyid, 'Verifies with munging');
-}
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
-
-# If the data is not munged on verification, it will not match, since GnuPG
-# treats the trailing whitespace as significant.
-my $signer = pgp_verify($signature, $version, @whitespace);
-is($signer,                q{}, 'Fails to verifies without munging');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
-
 # Test taking code from a code ref and then verifying the reulting signature.
 # Also test accepting only one return value from pgp_sign().
-my @code_input = @whitespace;
+my @code_input = @data;
 my $data_ref   = sub {
     my $line = shift(@code_input);
-    if (defined($line)) {
-        $line =~ s{ [ ]+ \n }{\n}xms;
-    }
     return $line;
 };
 $signature = pgp_sign($keyid, $passphrase, $data_ref);
@@ -109,7 +74,7 @@ open($fh, '<', "$data/message.asc");
 my @raw_signature = <$fh>;
 close($fh);
 $signature = join(q{}, @raw_signature[4 .. 6]);
-$signer = pgp_verify($signature, undef, \@data);
+my $signer = pgp_verify($signature, undef, \@data);
 is($signer, $expected, 'DSAv3 sig from array ref');
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
