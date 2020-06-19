@@ -70,16 +70,35 @@ our $TMPDIR = undef;
 sub output {
     my ($fh, $string) = @_;
     state $spaces = q{};
-    if ($MUNGE) {
-        $string = $spaces . $string;
-        $string =~ s/ +(\n.)/$1/g;
-        my $newline = ($string =~ s/\n$//);
-        $string =~ s/( +)$//;
-        if ($newline) { $string .= "\n" } else { $spaces = $1 }
-    } else {
-        $spaces = '';
+
+    # If this is the last bit of data, clear the saved state.
+    if (!defined($string)) {
+        $spaces = q{};
+        return;
     }
-    print $fh $string;
+
+    # If there were any left-over spaces from the last invocation, prepend
+    # them to the string and clear them.
+    if ($spaces) {
+        $string = $spaces . $string;
+        $spaces = q{};
+    }
+
+    # If whitespace munging is enabled, strip any trailing whitespace from
+    # each line of the string for which we've seen the newline.  Then, remove
+    # and store any spaces at the end of the string, since the newline may be
+    # in the next chunk.  If there turn out to be no further chunks, this
+    # removes any trailing whitespace on the last line without a newline,
+    # which is still correct.
+    if ($MUNGE) {
+        $string =~ s{ [ ]+ \n }{\n}xmsg;
+        if ($string =~ s{ ([ ]+) \Z }{}xms) {
+            $spaces = $1;
+        }
+    }
+
+    print {$fh} $string;
+    return;
 }
 
 # This is our generic "take this data and shove it" routine, used both for
@@ -130,6 +149,7 @@ sub write_data {
             output ($fh, $source);
         }
     }
+    output ($fh, undef);
 }
 
 # Create a detached signature for the given data.  The first argument should
