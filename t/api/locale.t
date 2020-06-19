@@ -5,7 +5,7 @@
 # This ensures that we're correctly using the machine-readable status API and
 # not the output intended for humans.
 #
-# Copyright 1998-2001, 2004, 2007, 2018 Russ Allbery <rra@cpan.org>
+# Copyright 1998-2001, 2004, 2007, 2018, 2020 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -19,7 +19,9 @@ use warnings;
 
 use Test::More tests => 5;
 
-BEGIN { use_ok('PGP::Sign'); }
+BEGIN {
+    use_ok('PGP::Sign', qw(pgp_sign pgp_verify pgp_error));
+}
 
 # Set the locale.  I use French for testing; this won't be a proper test
 # unless the locale is available on the local system, so hopefully this will
@@ -43,8 +45,8 @@ my $passphrase = 'testing';
 # Generate a signature and then verify it.
 my ($signature, $version) = pgp_sign($keyid, $passphrase, @data);
 isnt($signature, undef, 'Signature');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(pgp_error(), q{}, '...with no errors');
 
 # Check signature.
 is(pgp_verify($signature, $version, @data), $keyid, 'Verify');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(pgp_error(), q{}, '...with no errors');
