@@ -27,8 +27,7 @@ use Exporter ();
 use Fcntl qw(F_SETFD O_WRONLY O_CREAT O_EXCL);
 use FileHandle ();
 use IO::Handle;
-use IPC::Open3 qw(open3);
-use IPC::Run qw(start finish timeout);
+use IPC::Run qw(finish run start timeout);
 
 use strict;
 use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
@@ -227,6 +226,7 @@ sub pgp_verify {
     my $signature = shift;
     my $version = shift;
     chomp $signature;
+    undef @ERROR;
 
     # Ignore SIGPIPE, since we're going to be talking to PGP.
     local $SIG{PIPE} = 'IGNORE';
@@ -268,24 +268,19 @@ sub pgp_verify {
     }
     my @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
                    '--logger-fd=1');
+    if ($PGPPATH) {
+        push (@command, '--homedir', $PGPPATH);
+    }
 
     # Now, call PGP to check the signature.  Because we've written everything
     # out to a file, this is actually fairly simple; all we need to do is grab
     # stdout.
-    if ($PGPPATH) {
-        push (@command, '--homedir', $PGPPATH);
-    }
-    push (@command, "$filename.asc");
-    push (@command, $filename);
-    my $pgp = new FileHandle;
-    my $output = new FileHandle;
-    my $pid = eval { open3 ($pgp, $output, $output, @command) };
-    if ($@) {
-        unlink ($filename, "$filename.asc");
-        @ERROR = ($@, "Execution of $command[0] failed.\n");
-        return undef;
-    }
-    close $pgp;
+    push (@command, "$filename.asc", $filename);
+    my $output;
+    run(\@command, '>&', \$output);
+    my $status = $?;
+    unlink ($filename, "$filename.asc");
+    umask $umask;
 
     # Check for the message that gives us the key status and return the
     # appropriate thing to our caller.
@@ -294,20 +289,21 @@ sub pgp_verify {
     #   [GNUPG:] GOODSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
     #   [GNUPG:] BADSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
     local $_;
-    local $/ = '';
     my $signer;
-    while (<$output>) {
-        if (/\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
-            $signer = $1;
-            last;
+    for my $line (split("\n", $output)) {
+        if ($line =~ /\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
+            return $1;
+        } elsif ($line =~ /^\[GNUPG:\]\s+BADSIG\s+/) {
+            return '';
         }
     }
-    close $pgp;
-    undef @ERROR;
-    waitpid ($pid, 0);
-    unlink ($filename, "$filename.asc");
-    umask $umask;
-    $signer ? $signer : '';
+
+    # Neither a good nor a bad signature seen.
+    @ERROR = ($output);
+    if ($status != 0) {
+        push(@ERROR, "Execution of $command[0] failed with status $status.\n");
+    }
+    return undef;
 }
 
 # Return the errors resulting from the last call to pgp_sign() or pgp_verify()
