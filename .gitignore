@@ -10,9 +10,6 @@
 /blib/
 /cover_db/
 /pm_to_blib
-/t/data/.gpg-v21-migrated
-/t/data/private-keys-v1.d/
-/t/data/pubring.gpg~
-/t/data/random_seed
-/t/data/tofu.db
-/t/data/trustdb.gpg
+/t/data/gnupg1/pubring.gpg~
+/t/data/gnupg1/random_seed
+/t/data/gnupg1/trustdb.gpg

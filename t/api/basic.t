@@ -13,6 +13,7 @@ use 5.020;
 use autodie;
 use warnings;
 
+use File::Spec;
 use IO::File;
 use Test::More tests => 20;
 
@@ -20,7 +21,7 @@ BEGIN { use_ok('PGP::Sign'); }
 
 # Locate our test data directory for later use.
 my $data = 't/data';
-$PGP::Sign::PGPPATH = $data;
+$PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg1');
 
 # Open and load our data file.  This is the sample data that we'll be signing
 # and checking signatures against.

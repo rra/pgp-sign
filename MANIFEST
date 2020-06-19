@@ -2,6 +2,7 @@
 .gitignore
 Build.PL
 Changes
+cpanfile
 lib/PGP/Sign.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
@@ -10,6 +11,8 @@ README
 t/api/basic.t
 t/api/locale.t
 t/api/whitespace.t
+t/data/gnupg1/pubring.gpg
+t/data/gnupg1/secring.gpg
 t/data/message
 t/data/message.asc
 t/data/message.asc.v4
@@ -17,8 +20,6 @@ t/data/message.sig
 t/data/perl.conf
 t/data/perlcriticrc
 t/data/perltidyrc
-t/data/pubring.gpg
-t/data/secring.gpg
 t/docs/pod-spelling.t
 t/docs/pod.t
 t/docs/spdx-license.t

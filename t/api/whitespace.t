@@ -13,6 +13,7 @@ use 5.020;
 use autodie;
 use warnings;
 
+use File::Spec;
 use IO::File;
 use Test::More tests => 13;
 
@@ -22,7 +23,7 @@ BEGIN {
 
 # Locate our test data directory for later use.
 my $data = 't/data';
-$PGP::Sign::PGPPATH = $data;
+$PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg1');
 
 # The key ID and pass phrase to use for testing.
 my $keyid      = 'testing';
