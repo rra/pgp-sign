@@ -9,6 +9,12 @@ PGP::Sign 1.00 (unreleased)
     PGP::Sign now depends on IPC::Run and uses it to talk to GnuPG instead
     of hand-rolling equivalent functionality with IPC::Open3.
 
+    Use File::Temp to create temporary files.  This should significantly
+    improve the safety of temporary file creation.  The default directory
+    for temporary file creation is now whatever directory File::Temp
+    chooses by default.  It can stll be overridden by setting
+    $PGP::Sign::TMPDIR.
+
     Require a minimum Perl version of 5.10 and stop attempting to support
     versions of Perl back to 5.003, which are now impossible to test with
     and are missing many modern Perl features.

@@ -24,8 +24,7 @@ require 5.003;
 
 use Carp qw(croak);
 use Exporter ();
-use Fcntl qw(F_SETFD O_WRONLY O_CREAT O_EXCL);
-use FileHandle ();
+use File::Temp ();
 use IO::Handle;
 use IPC::Run qw(finish run start timeout);
 
@@ -65,7 +64,7 @@ $PGPPATH = '';
 $PGPSTYLE = 'GPG';
 
 # The directory in which temporary files should be created.
-$TMPDIR = $ENV{TMPDIR} || '/tmp';
+$TMPDIR = undef;
 
 ##############################################################################
 # Implementation
@@ -238,29 +237,19 @@ sub pgp_verify {
     # much easier.  It would be nice to do this without having to use
     # temporary files, but I don't see any way to do so without running into
     # mangling problems.
-    my $umask = umask 077;
-    my $filename = $TMPDIR . '/pgp' . time . '.' . $$;
-    my $sigfile = new FileHandle "$filename.asc", O_WRONLY|O_EXCL|O_CREAT;
-    unless ($sigfile) {
-        @ERROR = ("Unable to open temp file $filename.asc: $!\n");
-        return undef;
-    }
-    print $sigfile "-----BEGIN PGP SIGNATURE-----\n";
+    my @tmpdir = defined($TMPDIR) ? (DIR => $TMPDIR) : ();
+    my $sigfh = File::Temp->new(@tmpdir, SUFFIX => '.asc');
+    print $sigfh "-----BEGIN PGP SIGNATURE-----\n";
     if (defined $version) {
-        print $sigfile "Version: $version\n";
+        print $sigfh "Version: $version\n";
     }
-    print $sigfile "\n", $signature;
-    print $sigfile "\n-----END PGP SIGNATURE-----\n";
-    close $sigfile;
-    my $datafile = new FileHandle "$filename", O_WRONLY|O_EXCL|O_CREAT;
-    unless ($datafile) {
-        unlink "$filename.asc";
-        @ERROR = ("Unable to open temp file $filename: $!\n");
-        return undef;
-    }
-    unshift (@_, $datafile);
+    print $sigfh "\n", $signature;
+    print $sigfh "\n-----END PGP SIGNATURE-----\n";
+    close $sigfh;
+    my $datafh = File::Temp->new(@tmpdir);
+    unshift (@_, $datafh);
     &write_data;
-    close $datafile;
+    close $datafh;
 
     # Figure out what command line we'll be using.
     if ($PGPSTYLE ne 'GPG') {
@@ -271,16 +260,14 @@ sub pgp_verify {
     if ($PGPPATH) {
         push (@command, '--homedir', $PGPPATH);
     }
+    push (@command, $sigfh->filename, $datafh->filename);
 
     # Now, call PGP to check the signature.  Because we've written everything
     # out to a file, this is actually fairly simple; all we need to do is grab
     # stdout.
-    push (@command, "$filename.asc", $filename);
     my $output;
     run(\@command, '>&', \$output);
     my $status = $?;
-    unlink ($filename, "$filename.asc");
-    umask $umask;
 
     # Check for the message that gives us the key status and return the
     # appropriate thing to our caller.
@@ -414,8 +401,8 @@ only valid value for this variable is "GPG" for GnuPG behavior.
 
 =item $PGP::Sign::TMPDIR
 
-The directory in which temporary files are created.  Defaults to TMPDIR if
-set, and F</tmp> if not.
+The directory in which temporary files are created.  Defaults to whatever
+directory File::Temp choses to use by default.
 
 =item $PGP::Sign::MUNGE
 
@@ -564,7 +551,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-gpg1(1)
+gpg1(1), L<File::Temp>
 
 RFC 2440, L<http://www.rfc-editor.org/rfc/rfc2440.txt>, which specifies the
 OpenPGP message format.
