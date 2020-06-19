@@ -19,54 +19,47 @@
 # Modules and declarations
 ##############################################################################
 
-package PGP::Sign;
+package PGP::Sign 0.20;
 
-use 5.010;
-use strict;
+use 5.020;
 use warnings;
 
 use Carp qw(croak);
-use Exporter ();
+use Exporter qw(import);
 use File::Temp ();
 use IO::Handle;
 use IPC::Run qw(finish run start timeout);
 
-use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
-            $PGPSTYLE $TMPDIR $VERSION);
-
-@ISA       = qw(Exporter);
-@EXPORT    = qw(pgp_sign pgp_verify);
-@EXPORT_OK = qw(pgp_error);
-
-# The current PGP::Sign version number.
-$VERSION = '0.20';
+# Export pgp_sign and pgp_verify by default for backwards compatibility.
+our @EXPORT    = qw(pgp_sign pgp_verify);
+our @EXPORT_OK = qw(pgp_error);
 
 ##############################################################################
 # Global variables
 ##############################################################################
 
 # The text of any errors resulting from the last call to pgp_sign().
-@ERROR = ();
+our @ERROR = ();
 
 # Whether or not to perform some standard munging to make other signing and
 # checking routines happy.
-$MUNGE = 0;
+our $MUNGE = 0;
 
 # The default path to PGP.  PGPS is for signing, PGPV is for verifying (with
 # PGP v5 these are two different commands).
-$PGPS = '/usr/bin/gpg1';
-$PGPV = '/usr/bin/gpg1';
+our $PGPS = '/usr/bin/gpg1';
+our $PGPV = '/usr/bin/gpg1';
 
 # The path to the directory containing the key ring.  If not set, defaults to
 # $ENV{GNUPGHOME} or $HOME/.gnupg.
-$PGPPATH = '';
+our $PGPPATH = '';
 
 # What style of PGP invocation to use by default.  The only allowable value is
 # GPG.
-$PGPSTYLE = 'GPG';
+our $PGPSTYLE = 'GPG';
 
 # The directory in which temporary files should be created.
-$TMPDIR = undef;
+our $TMPDIR = undef;
 
 ##############################################################################
 # Implementation
@@ -74,21 +67,19 @@ $TMPDIR = undef;
 
 # This function actually sends the data to a file handle.  It's necessary to
 # implement munging (stripping trailing spaces on a line).
-{
-    my $spaces = '';
-    sub output {
-        my ($fh, $string) = @_;
-        if ($MUNGE) {
-            $string = $spaces . $string;
-            $string =~ s/ +(\n.)/$1/g;
-            my $newline = ($string =~ s/\n$//);
-            $string =~ s/( +)$//;
-            if ($newline) { $string .= "\n" } else { $spaces = $1 }
-        } else {
-            $spaces = '';
-        }
-        print $fh $string;
+sub output {
+    my ($fh, $string) = @_;
+    state $spaces = q{};
+    if ($MUNGE) {
+        $string = $spaces . $string;
+        $string =~ s/ +(\n.)/$1/g;
+        my $newline = ($string =~ s/\n$//);
+        $string =~ s/( +)$//;
+        if ($newline) { $string .= "\n" } else { $spaces = $1 }
+    } else {
+        $spaces = '';
     }
+    print $fh $string;
 }
 
 # This is our generic "take this data and shove it" routine, used both for
@@ -129,20 +120,11 @@ sub write_data {
         } elsif (ref $source eq 'REF') {
             output ($fh, $source);
         } elsif (ref $source)  {
-            if ($] > 5.003) {
-                if (UNIVERSAL::isa ($source, 'IO::Handle')) {
-                    local $_;
-                    while (<$source>) { output ($fh, $_) }
-                } else {
-                    output ($fh, $source);
-                }
+            if (UNIVERSAL::isa ($source, 'IO::Handle')) {
+                local $_;
+                while (<$source>) { output ($fh, $_) }
             } else {
-                if (ref $source eq 'FileHandle') {
-                    local $_;
-                    while (<$source>) { output ($fh, $_) }
-                } else {
-                    output ($fh, $source);
-                }
+                output ($fh, $source);
             }
         } else {
             output ($fh, $source);
