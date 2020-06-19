@@ -6,6 +6,9 @@ PGP::Sign 1.00 (unreleased)
     seen a working copy of the old commercial PGP implementations in years
     and no longer have any way to test PGP::Sign with them.
 
+    PGP::Sign now depends on IPC::Run and uses it to talk to GnuPG instead
+    of hand-rolling equivalent functionality with IPC::Open3.
+
     Require a minimum Perl version of 5.10 and stop attempting to support
     versions of Perl back to 5.003, which are now impossible to test with
     and are missing many modern Perl features.
