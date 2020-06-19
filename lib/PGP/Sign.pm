@@ -217,7 +217,6 @@ sub pgp_sign {
         '<pipe', $writefh,
         '>', \$signature,
         '2>', \$errors,
-        timeout(10),
     );
     #>>>
     write_data($writefh, @sources);
