@@ -7,7 +7,6 @@
 /MYMETA.yml
 /PGP-Sign-*/
 /PGP-Sign-*.tar.gz
-/Sign.pm
 /_build/
 /blib/
 /cover_db/
