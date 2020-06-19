@@ -2,7 +2,7 @@
 #
 # Basic tests for PGP::Sign functionality.
 #
-# Copyright 1998-2001, 2004, 2007, 2018 Russ Allbery <rra@cpan.org>
+# Copyright 1998-2001, 2004, 2007, 2018, 2020 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use IO::File;
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 BEGIN { use_ok('PGP::Sign'); }
 
@@ -113,4 +113,17 @@ open($fh, '<', "$data/message.asc.v4");
 close($fh);
 $signature = join(q{}, @raw_signature[4 .. 6]);
 $signer = pgp_verify($signature, undef, IO::File->new("$data/message", 'r'));
+is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+
+# Check an ancient PGP 2.x signature.
+open($fh, '<', "$data/message.sig");
+@raw_signature = <$fh>;
+close($fh);
+$signature = join(q{}, @raw_signature[3 .. 6]);
+$signer = pgp_verify($signature, undef, \@data);
+is(
+    $signer,
+    'R. Russell Allbery <eagle@windlord.stanford.edu>',
+    'PGP sig from array ref'
+);
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
