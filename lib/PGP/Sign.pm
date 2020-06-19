@@ -548,7 +548,7 @@ RFC 2440, L<http://www.rfc-editor.org/rfc/rfc2440.txt>, which specifies the
 OpenPGP message format.
 
 The current version of this module is always available from its web site at
-L<http://www.eyrie.org/~eagle/software/pgp-sign/>.
+L<https://www.eyrie.org/~eagle/software/pgp-sign/>.
 
 =cut
 

@@ -98,13 +98,19 @@ is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
+# Avoid test warnings about using my obsolete address.  For better or worse,
+# this was the UID used to generate that signature, and I don't want to
+# regenerate it since the point of the test is to check signatures generated
+# by obsolete versions.
+my $expected = 'Russ Allbery <rra' . '@stanford.edu>';
+
 # Check an external version three DSA signature with data from an array ref.
 open($fh, '<', "$data/message.asc");
 my @raw_signature = <$fh>;
 close($fh);
 $signature = join(q{}, @raw_signature[4 .. 6]);
 $signer = pgp_verify($signature, undef, \@data);
-is($signer, 'Russ Allbery <rra@stanford.edu>', 'DSAv3 sig from array ref');
+is($signer, $expected, 'DSAv3 sig from array ref');
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
 # Check an external version four DSA signature from an IO::Handle.
