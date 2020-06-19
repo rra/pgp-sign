@@ -308,6 +308,10 @@ sub pgp_error {
 
 __DATA__
 
+=for stopwords
+Allbery DSS GNUPGHOME GPG Gierth Mitzelfelt OpenPGP PGPMoose PGPPATH TMPDIR
+canonicalized d'Itri egd keyrings pgpverify ps signcontrol
+
 =head1 NAME
 
 PGP::Sign - Create detached PGP signatures for data, securely
@@ -357,7 +361,7 @@ signature).  Warning:  It's expected that in the future this interface will
 change, and pgp_sign() will instead return a list consisting of the
 ASCII-armored block and all headers found in the armor.
 
-pgp_sign() will pass it the option B<--force-v3-sigs> so that it will generate
+pgp_sign() will pass it the option C<--force-v3-sigs> so that it will generate
 PGP 5.0-compatible signatures.
 
 pgp_sign() will return undef in the event of any sort of error.
@@ -402,7 +406,7 @@ only valid value for this variable is "GPG" for GnuPG behavior.
 =item $PGP::Sign::TMPDIR
 
 The directory in which temporary files are created.  Defaults to whatever
-directory File::Temp choses to use by default.
+directory File::Temp chooses to use by default.
 
 =item $PGP::Sign::MUNGE
 
@@ -481,7 +485,7 @@ crashes unexpectedly.  Setting $PGP::Sign::TMPDIR is recommended.
 Also, because of this incompatibility, you need to be aware of what the
 process checking the signatures you generate is expecting.  If that process
 is going to turn your signature into an attached signature for verification
-(as pgpverify does for Usenet control messages), then you need to pre-munge
+(as B<pgpverify> does for Usenet control messages), then you need to pre-munge
 your data to remove trailing whitespace at the ends of lines before feeding
 it to PGP.  PGP::Sign will do that for you if you set $PGP::Sign::MUNGE to a
 true value.
@@ -517,7 +521,7 @@ newer version of this module.  The README will list API changes.
 PGP::Sign passes pass phrases to PGP via an open one-ended pipe, since this
 is the only secure method (both command line switches and environment
 variables can potentially be read by other users on the same machine using
-ps).  This should be supported by any recent version of PGP; I have tested
+B<ps>).  This should be supported by any recent version of PGP; I have tested
 it against 2.6.2, 2.6.3i, 5.0, 6.5.2, GnuPG 0.9.2, and GnuPG 1.0.1.
 Implicit in this mechanism, though, is the requirement that the operating
 system on which you're running this module supports passing an open pipe to
@@ -526,17 +530,17 @@ substandard operating systems.
 
 =head1 HISTORY
 
-Based heavily on work by Andrew Gierth and benefitting greatly from input,
+Based heavily on work by Andrew Gierth and benefiting greatly from input,
 comments, suggestions, and help from him, this module came about in the
 process of implementing PGPMoose signatures and control message signatures
-for Usenet.  PGPMoose is the idea of Greg Rose, and signcontrol and
-pgpverify are the idea of David Lawrence.
+for Usenet.  PGPMoose is the idea of Greg Rose, and B<signcontrol> and
+B<pgpverify> are the idea of David Lawrence.
 
 Support for PGPPATH, the test suite, some bug fixes, and the impetus to get
 another version released came from Andrew Ford.  Thank you.
 
 Original support for GnuPG from Todd Underwood and Monte Mitzelfelt.  Code
-for using --status-fd based on code by Marco d'Itri.
+for using C<--status-fd> based on code by Marco d'Itri.
 
 =head1 AUTHOR
 
