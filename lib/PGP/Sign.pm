@@ -256,7 +256,7 @@ sub pgp_verify {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
     my @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
-                   '--logger-fd=1');
+                   '--allow-weak-digest-algos', '--logger-fd=1');
     if ($PGPPATH) {
         push (@command, '--homedir', $PGPPATH);
     }
