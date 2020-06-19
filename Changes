@@ -15,6 +15,10 @@ PGP::Sign 1.00 (unreleased)
     chooses by default.  It can stll be overridden by setting
     $PGP::Sign::TMPDIR.
 
+    Pass --allow-weak-digest-algos to pgp_sign and pgp_verify so that they
+    can use old keys and verify signatures from old keys, such as those
+    created with PGP 2.6.2.
+
     When calling pgp_sign multiple times in the same process with
     whitespace munging enabled, trailing whitespace without a newline
     could have leaked into the next invocation of pgp_sign, resulting in

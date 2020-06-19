@@ -199,8 +199,9 @@ sub pgp_sign {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
     my @command = (
-        $PGPS, qw(--detach-sign --armor --textmode --batch --force-v3-sigs),
-        '-u', $keyid, '--passphrase-fd=3',
+        $PGPS, '-u', $keyid, qw(
+          --detach-sign --armor --textmode --batch --force-v3-sigs
+          --allow-weak-digest-algos --passphrase-fd=3),
     );
     if ($PGPPATH) {
         push(@command, '--homedir', $PGPPATH);
@@ -398,13 +399,16 @@ change, and pgp_sign() will instead return a list consisting of the
 ASCII-armored block and all headers found in the armor.
 
 pgp_sign() will pass it the option C<--force-v3-sigs> so that it will generate
-PGP 5.0-compatible signatures.
+PGP 5.0-compatible signatures, and C<--allow-weak-digest-algos> so that it can
+use old PGP keys.
 
 pgp_sign() will return undef in the event of any sort of error.
 
 pgp_verify() returns the signer of the message in the case of a good
 signature, the empty string in the case of a bad signature, and undef in the
 event of some error.  It takes the same sort of data sources as pgp_sign().
+It will pass the option C<--allow-weak-digest-algos> so that it can verify old
+signatures.
 
 pgp_error() (which isn't exported by default) returns the error encountered
 by the last pgp_sign() or pgp_verify(), or undef if there was no error.  In
