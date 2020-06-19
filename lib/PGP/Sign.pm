@@ -26,7 +26,9 @@ use Carp qw(croak);
 use Exporter ();
 use Fcntl qw(F_SETFD O_WRONLY O_CREAT O_EXCL);
 use FileHandle ();
+use IO::Handle;
 use IPC::Open3 qw(open3);
+use IPC::Run qw(start finish timeout);
 
 use strict;
 use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
@@ -170,74 +172,47 @@ sub pgp_sign {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
     my @command = ($PGPS, '--detach-sign', '--armor', '--textmode',
-                   '--batch', '--force-v3-sigs', '-u', $keyid);
-
-    # We need to send the password to PGP, but we don't want to use either the
-    # command line or an environment variable, since both may expose us to
-    # snoopers on the system.  So we create a pipe, stick the password in it,
-    # and then pass the file descriptor to GnuPG.  5.005_03 started setting
-    # close-on-exec on file handles > $^F, so we need to clear that here (but
-    # ignore errors on platforms where fcntl or F_SETFD doesn't exist, if
-    # any).
-    my $passfh = new FileHandle;
-    my $writefh = new FileHandle;
-    pipe ($passfh, $writefh);
-    eval { fcntl ($passfh, F_SETFD, 0) };
-    print $writefh $passphrase;
-    close $writefh;
-    local $ENV{PGPPASSFD};
-    push (@command, '--passphrase-fd', $passfh->fileno);
+                   '--batch', '--force-v3-sigs', '-u', $keyid,
+                   '--passphrase-fd', '3');
+    if ($PGPPATH) {
+        push (@command, '--homedir', $PGPPATH);
+    }
 
     # Fork off a pgp process that we're going to be feeding data to, and tell
     # it to just generate a signature using the given key id and pass phrase.
     # Set PGPPATH if desired.
-    if ($PGPPATH) {
-        push (@command, '--homedir', $PGPPATH);
-    }
-    my $pgp = new FileHandle;
-    my $signature = new FileHandle;
-    my $errors = new FileHandle;
-    my $pid = eval { open3 ($pgp, $signature, $errors, @command) };
-    if ($@) {
-        @ERROR = ($@, "Execution of $command[0] failed.\n");
-        return undef;
-    }
-
-    # Send the rest of the arguments off to write_data().
-    unshift (@_, $pgp);
+    my $writefh = IO::Handle->new();
+    my ($signature, $errors);
+    my $h = start(\@command, '3<', \$passphrase, '<pipe', $writefh,
+                  '>', \$signature, '2>', \$errors, timeout(10));
+    unshift(@_, $writefh);
     &write_data;
-
-    # All done.  Close the pipe to PGP, clean up, and see if we succeeded.  If
-    # not, save the error output and return undef.
-    close $pgp;
-    local $/ = "\n";
-    my @errors = <$errors>;
-    my @signature = <$signature>;
-    close $signature;
-    close $errors;
-    close $passfh;
-    waitpid ($pid, 0);
-    if ($? != 0) {
-        @ERROR = (@errors, "$command[0] returned exit status $?\n");
+    close($writefh);
+    if (!finish($h)) {
+        my $status = $h->result();
+        @ERROR = (
+            $errors,
+            "Execution of $command[0] failed with status $status.\n"
+        );
         return undef;
     }
 
     # Now, clean up the returned signature and return it, along with the
     # version number if desired.
-    while ((shift @signature) !~ /-----BEGIN PGP SIGNATURE-----\n/) {
+    my @signature = split("\n", $signature);
+    while ((shift @signature) !~ /-----BEGIN PGP SIGNATURE-----/) {
         unless (@signature) {
             @ERROR = ("No signature from PGP (command not found?)\n");
             return undef;
         }
     }
     my $version;
-    while ($signature[0] ne "\n" && @signature) {
+    while ($signature[0] ne q{} && @signature) {
         $version = $1 if ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
     }
     shift @signature;
     pop @signature;
-    $signature = join ('', @signature);
-    chomp $signature;
+    $signature = join ("\n", @signature);
     undef @ERROR;
     wantarray ? ($signature, $version) : $signature;
 }

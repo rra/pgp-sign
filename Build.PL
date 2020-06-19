@@ -2,7 +2,7 @@
 #
 # Build script for the PGP::Sign distribution.
 #
-# Copyright 2018 Russ Allbery <rra@cpan.org>
+# Copyright 2018, 2020 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -26,7 +26,10 @@ my $build = Module::Build->new(
 
     # Other package relationships.
     configure_requires => { 'Module::Build' => 0.28    },
-    requires           => { 'perl'          => '5.010' },
+    requires           => {
+        'IPC::Run' => 0,
+        'perl'     => '5.010',
+    },
 );
 
 # Generate the build script.

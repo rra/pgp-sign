@@ -23,7 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install prerequisites
-        run: sudo apt-get install gnupg gnupg1 libmodule-build-perl
+        run: >-
+          sudo apt-get install gnupg gnupg1 libipc-run-perl libmodule-build-perl
       - name: perl -V
         run: perl -V
       - name: Build.PL
