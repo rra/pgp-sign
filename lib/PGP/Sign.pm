@@ -22,6 +22,7 @@
 package PGP::Sign 0.20;
 
 use 5.020;
+use autodie;
 use warnings;
 
 use Carp qw(croak);
@@ -31,8 +32,10 @@ use IO::Handle;
 use IPC::Run qw(finish run start timeout);
 
 # Export pgp_sign and pgp_verify by default for backwards compatibility.
+## no critic (Modules::ProhibitAutomaticExportation)
 our @EXPORT    = qw(pgp_sign pgp_verify);
 our @EXPORT_OK = qw(pgp_error);
+## use critic
 
 ##############################################################################
 # Global variables
@@ -52,18 +55,33 @@ our $PGPV = '/usr/bin/gpg1';
 
 # The path to the directory containing the key ring.  If not set, defaults to
 # $ENV{GNUPGHOME} or $HOME/.gnupg.
-our $PGPPATH = '';
+our $PGPPATH;
 
 # What style of PGP invocation to use by default.  The only allowable value is
 # GPG.
 our $PGPSTYLE = 'GPG';
 
 # The directory in which temporary files should be created.
-our $TMPDIR = undef;
+our $TMPDIR;
 
 ##############################################################################
 # Implementation
 ##############################################################################
+
+# print with error checking and an explicit file handle.  autodie
+# unfortunately can't help us with these because they can't be prototyped and
+# hence can't be overridden.
+#
+# $fh   - Output file handle
+# @args - Remaining arguments to print
+#
+# Returns: undef
+#  Throws: Text exception on output failure
+sub print_fh {
+    my ($fh, @args) = @_;
+    print {$fh} @args or croak('print failed');
+    return;
+}
 
 # This function actually sends the data to a file handle.  It's necessary to
 # implement munging (stripping trailing spaces on a line).
@@ -97,7 +115,7 @@ sub output {
         }
     }
 
-    print {$fh} $string;
+    print_fh($fh, $string);
     return;
 }
 
@@ -113,7 +131,7 @@ sub output {
 # repeatedly, whatever it returns being passed to PGP using the ORS specified
 # if any, until it returns undef.
 sub write_data {
-    my $fh = shift;
+    my ($fh, @sources) = @_;
 
     # Deal with all of our possible sources of input, one at a time.  We
     # really want perl 5.004 here, since we want UNIVERSAL::isa().
@@ -124,32 +142,39 @@ sub write_data {
     # to references, so those we just print.  (Perl allows circular
     # references, so we can't just dereference references to references until
     # we get something interesting.)  Hashes are treated like arrays.
-    my $source;
-    for $source (@_) {
-        if (ref $source eq 'ARRAY' or ref $source eq 'HASH') {
-            for (@$source) { output ($fh, $_) }
-        } elsif (ref $source eq 'GLOB' or ref \$source eq 'GLOB') {
-            local $_;
-            while (<$source>) { output ($fh, $_) }
-        } elsif (ref $source eq 'SCALAR') {
-            output ($fh, $$source);
-        } elsif (ref $source eq 'CODE') {
-            local $_;
-            while (defined ($_ = &$source ())) { output ($fh, $_) }
-        } elsif (ref $source eq 'REF') {
-            output ($fh, $source);
-        } elsif (ref $source)  {
-            if (UNIVERSAL::isa ($source, 'IO::Handle')) {
-                local $_;
-                while (<$source>) { output ($fh, $_) }
+    for my $source (@sources) {
+        if (ref($source) eq 'ARRAY' || ref($source) eq 'HASH') {
+            for my $chunk (@$source) {
+                output($fh, $chunk);
+            }
+        } elsif (ref($source) eq 'GLOB' || ref(\$source) eq 'GLOB') {
+            while (defined(my $chunk = <$source>)) {
+                output($fh, $chunk);
+            }
+        } elsif (ref($source) eq 'SCALAR') {
+            output($fh, $$source);
+        } elsif (ref($source) eq 'CODE') {
+            while (defined(my $chunk = &$source())) {
+                output($fh, $chunk);
+            }
+        } elsif (ref($source) eq 'REF') {
+            output($fh, $source);
+        } elsif (ref($source)) {
+            if ($source->isa('IO::Handle')) {
+                while (defined(my $chunk = <$source>)) {
+                    output($fh, $chunk);
+                }
             } else {
-                output ($fh, $source);
+                output($fh, $source);
             }
         } else {
-            output ($fh, $source);
+            output($fh, $source);
         }
     }
-    output ($fh, undef);
+
+    # Indicate end of input to clear any whitespace munging state.
+    output($fh, undef);
+    return;
 }
 
 # Create a detached signature for the given data.  The first argument should
@@ -163,8 +188,8 @@ sub write_data {
 # event of an error, and the error text is then stored in @PGP::Sign::ERROR
 # and can be retrieved with pgp_error().
 sub pgp_sign {
-    my $keyid = shift;
-    my $passphrase = shift;
+    my ($keyid, $passphrase, @sources) = @_;
+    undef @ERROR;
 
     # Ignore SIGPIPE, since we're going to be talking to PGP.
     local $SIG{PIPE} = 'IGNORE';
@@ -173,50 +198,57 @@ sub pgp_sign {
     if ($PGPSTYLE ne 'GPG') {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
-    my @command = ($PGPS, '--detach-sign', '--armor', '--textmode',
-                   '--batch', '--force-v3-sigs', '-u', $keyid,
-                   '--passphrase-fd', '3');
+    my @command = (
+        $PGPS, qw(--detach-sign --armor --textmode --batch --force-v3-sigs),
+        '-u', $keyid, '--passphrase-fd=3',
+    );
     if ($PGPPATH) {
-        push (@command, '--homedir', $PGPPATH);
+        push(@command, '--homedir', $PGPPATH);
     }
 
     # Fork off a pgp process that we're going to be feeding data to, and tell
     # it to just generate a signature using the given key id and pass phrase.
-    # Set PGPPATH if desired.
     my $writefh = IO::Handle->new();
     my ($signature, $errors);
-    my $h = start(\@command, '3<', \$passphrase, '<pipe', $writefh,
-                  '>', \$signature, '2>', \$errors, timeout(10));
-    unshift(@_, $writefh);
-    &write_data;
+    #<<<
+    my $h = start(
+        \@command,
+        '3<', \$passphrase,
+        '<pipe', $writefh,
+        '>', \$signature,
+        '2>', \$errors,
+        timeout(10),
+    );
+    #>>>
+    write_data($writefh, @sources);
     close($writefh);
     if (!finish($h)) {
         my $status = $h->result();
-        @ERROR = (
-            $errors,
-            "Execution of $command[0] failed with status $status.\n"
-        );
-        return undef;
+        @ERROR = ($errors,
+            "Execution of $command[0] failed with status $status.\n");
+        return;
     }
 
     # Now, clean up the returned signature and return it, along with the
     # version number if desired.
-    my @signature = split("\n", $signature);
-    while ((shift @signature) !~ /-----BEGIN PGP SIGNATURE-----/) {
-        unless (@signature) {
+    my @signature = split(m{\n}xms, $signature);
+    while ((shift @signature) !~ m{-----BEGIN [ ] PGP [ ] SIGNATURE-----}xms) {
+        if (!@signature) {
             @ERROR = ("No signature from PGP (command not found?)\n");
-            return undef;
+            return;
         }
     }
     my $version;
-    while ($signature[0] ne q{} && @signature) {
-        $version = $1 if ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
+    while (@signature && $signature[0] ne q{}) {
+        my $header = shift(@signature);
+        if ($header =~ m{ ^ Version: \s+ (.*?) \s* \z }xms) {
+            $version = $1;
+        }
     }
-    shift @signature;
-    pop @signature;
-    $signature = join ("\n", @signature);
-    undef @ERROR;
-    wantarray ? ($signature, $version) : $signature;
+    shift(@signature);
+    pop(@signature);
+    $signature = join("\n", @signature);
+    return wantarray ? ($signature, $version) : $signature;
 }
 
 # Check a detatched signature for given data.  Takes a signature block (in the
@@ -226,9 +258,8 @@ sub pgp_sign {
 # signature didn't check, and undef in the event of an error.  In the event of
 # some sort of an error, we stick the error in @ERROR.
 sub pgp_verify {
-    my $signature = shift;
-    my $version = shift;
-    chomp $signature;
+    my ($signature, $version, @sources) = @_;
+    chomp($signature);
     undef @ERROR;
 
     # Ignore SIGPIPE, since we're going to be talking to PGP.
@@ -242,29 +273,30 @@ sub pgp_verify {
     # temporary files, but I don't see any way to do so without running into
     # mangling problems.
     my @tmpdir = defined($TMPDIR) ? (DIR => $TMPDIR) : ();
-    my $sigfh = File::Temp->new(@tmpdir, SUFFIX => '.asc');
-    print $sigfh "-----BEGIN PGP SIGNATURE-----\n";
+    my $sigfh  = File::Temp->new(@tmpdir, SUFFIX => '.asc');
+    print_fh($sigfh, "-----BEGIN PGP SIGNATURE-----\n");
     if (defined $version) {
-        print $sigfh "Version: $version\n";
+        print_fh($sigfh, "Version: $version\n");
     }
-    print $sigfh "\n", $signature;
-    print $sigfh "\n-----END PGP SIGNATURE-----\n";
-    close $sigfh;
+    print_fh($sigfh, "\n", $signature);
+    print_fh($sigfh, "\n-----END PGP SIGNATURE-----\n");
+    close($sigfh);
     my $datafh = File::Temp->new(@tmpdir);
-    unshift (@_, $datafh);
-    &write_data;
-    close $datafh;
+    write_data($datafh, @sources);
+    close($datafh);
 
     # Figure out what command line we'll be using.
     if ($PGPSTYLE ne 'GPG') {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
-    my @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
-                   '--allow-weak-digest-algos', '--logger-fd=1');
+    my @command = (
+        $PGPV, '--batch', '--verify', '--quiet', '--status-fd=1',
+        '--allow-weak-digest-algos', '--logger-fd=1',
+    );
     if ($PGPPATH) {
-        push (@command, '--homedir', $PGPPATH);
+        push(@command, '--homedir', $PGPPATH);
     }
-    push (@command, $sigfh->filename, $datafh->filename);
+    push(@command, $sigfh->filename, $datafh->filename);
 
     # Now, call PGP to check the signature.  Because we've written everything
     # out to a file, this is actually fairly simple; all we need to do is grab
@@ -279,13 +311,11 @@ sub pgp_verify {
     # GPG 1.4.23
     #   [GNUPG:] GOODSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
     #   [GNUPG:] BADSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
-    local $_;
-    my $signer;
-    for my $line (split("\n", $output)) {
-        if ($line =~ /\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
+    for my $line (split(m{\n}xms, $output)) {
+        if ($line =~ m{ \[GNUPG:\] \s+ GOODSIG \s+ \S+ \s+ (.*)}xms) {
             return $1;
-        } elsif ($line =~ /^\[GNUPG:\]\s+BADSIG\s+/) {
-            return '';
+        } elsif ($line =~ m{ ^ \[GNUPG:\] \s+ BADSIG \s+ }xms) {
+            return q{};
         }
     }
 
@@ -294,13 +324,13 @@ sub pgp_verify {
     if ($status != 0) {
         push(@ERROR, "Execution of $command[0] failed with status $status.\n");
     }
-    return undef;
+    return;
 }
 
 # Return the errors resulting from the last call to pgp_sign() or pgp_verify()
 # or the empty list if there are none.
 sub pgp_error {
-    wantarray ? @ERROR : join ('', @ERROR);
+    return wantarray ? @ERROR : join(q{}, @ERROR);
 }
 
 ##############################################################################

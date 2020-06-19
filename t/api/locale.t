@@ -26,7 +26,7 @@ BEGIN {
 # Set the locale.  I use French for testing; this won't be a proper test
 # unless the locale is available on the local system, so hopefully this will
 # be a common one.
-$ENV{LC_ALL} = 'fr_FR';
+local $ENV{LC_ALL} = 'fr_FR';
 
 # Locate our test data directory for later use.
 my $data = 't/data';
@@ -49,4 +49,4 @@ is(pgp_error(), q{}, '...with no errors');
 
 # Check signature.
 is(pgp_verify($signature, $version, @data), $keyid, 'Verify');
-is(pgp_error(), q{}, '...with no errors');
+is(pgp_error(),                             q{},    '...with no errors');

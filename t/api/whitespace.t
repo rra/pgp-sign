@@ -38,7 +38,7 @@ is(pgp_verify($signature, $version, q{       }), $keyid, 'Pure whitespace');
     local $PGP::Sign::MUNGE = 1;
     ($signature, $version) = pgp_sign($keyid, $passphrase, q{       });
 }
-is(pgp_verify($signature, $version, q{       }), q{}, "Munged doesn't match");
+is(pgp_verify($signature, $version, q{       }), q{}, 'Munged does not match');
 is(pgp_verify($signature, $version, q{}), $keyid, '...but does match empty');
 
 # Put the newline in the next chunk of data and confirm that it is still
@@ -48,11 +48,8 @@ my @message = ('foo    ', "\n  bar   ", "  \nbaz    ");
     local $PGP::Sign::MUNGE = 1;
     ($signature, $version) = pgp_sign($keyid, $passphrase, @message);
 }
-is(
-    pgp_verify($signature, $version, "foo\n  bar\nbaz"),
-    $keyid,
-    'Munging works when separated from newline'
-);
+is(pgp_verify($signature, $version, "foo\n  bar\nbaz"),
+    $keyid, 'Munging works when separated from newline');
 
 # Open and load a more comprehensive data file.
 open(my $fh, '<', "$data/message");
@@ -75,7 +72,7 @@ is(pgp_error(), q{}, '...with no errors');
 # This signature should be over the same content as @data, so should verify
 # when given @data as the message.
 is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
-is(pgp_error(), q{}, '...with no errors');
+is(pgp_error(),                             q{},    '...with no errors');
 
 # This signature should also verify when mugning of the data is enabled.
 {

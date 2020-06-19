@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use IO::File;
-use Test::More tests => 18;
+use Test::More tests => 20;
 
 BEGIN { use_ok('PGP::Sign'); }
 
@@ -35,20 +35,22 @@ my $passphrase = 'testing';
 
 # Generate a signature and then verify it.
 my ($signature, $version) = pgp_sign($keyid, $passphrase, @data);
+ok($signature, 'Sign');
+is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 isnt($signature, undef, 'Signature');
 is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
 # Check signature.
 is(pgp_verify($signature, $version, @data), $keyid, 'Verify');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
 
 # The same without version, which shouldn't matter.
 is(pgp_verify($signature, undef, @data), $keyid, 'Verify without version');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(PGP::Sign::pgp_error(),               q{},    '...with no errors');
 
 # Check a failed signature by appending some nonsense to the data.
 is(pgp_verify($signature, $version, @data, 'xyzzy'), q{}, 'Verify invalid');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(PGP::Sign::pgp_error(),                           q{}, '...with no errors');
 
 # Test taking code from a code ref and then verifying the reulting signature.
 # Also test accepting only one return value from pgp_sign().
@@ -59,15 +61,15 @@ my $data_ref   = sub {
 };
 $signature = pgp_sign($keyid, $passphrase, $data_ref);
 isnt($signature, undef, 'Signature from code ref');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
 is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
 
 # Avoid test warnings about using my obsolete address.  For better or worse,
 # this was the UID used to generate that signature, and I don't want to
 # regenerate it since the point of the test is to check signatures generated
 # by obsolete versions.
-my $expected = 'Russ Allbery <rra' . '@stanford.edu>';
+my $expected = 'Russ Allbery <rra@' . 'stanford.edu>';
 
 # Check an external version three DSA signature with data from an array ref.
 open($fh, '<', "$data/message.asc");
@@ -75,8 +77,8 @@ my @raw_signature = <$fh>;
 close($fh);
 $signature = join(q{}, @raw_signature[4 .. 6]);
 my $signer = pgp_verify($signature, undef, \@data);
-is($signer, $expected, 'DSAv3 sig from array ref');
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is($signer,                $expected, 'DSAv3 sig from array ref');
+is(PGP::Sign::pgp_error(), q{},       '...with no errors');
 
 # Check an external version four DSA signature from an IO::Handle.
 open($fh, '<', "$data/message.asc.v4");
@@ -91,7 +93,7 @@ open($fh, '<', "$data/message.sig");
 @raw_signature = <$fh>;
 close($fh);
 $signature = join(q{}, @raw_signature[3 .. 6]);
-$signer = pgp_verify($signature, undef, \@data);
+$signer    = pgp_verify($signature, undef, \@data);
 is(
     $signer,
     'R. Russell Allbery <eagle@windlord.stanford.edu>',
