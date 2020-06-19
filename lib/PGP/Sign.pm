@@ -19,7 +19,7 @@
 # Modules and declarations
 ##############################################################################
 
-package PGP::Sign 0.20;
+package PGP::Sign 1.00;
 
 use 5.020;
 use autodie;
