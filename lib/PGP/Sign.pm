@@ -319,9 +319,12 @@ PGP::Sign - Create detached PGP signatures for data, securely
 =head1 SYNOPSIS
 
     use PGP::Sign;
-    ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
-    $signer = pgp_verify ($signature, $version, @data);
-    @errors = PGP::Sign::pgp_error;
+    my $keyid = '<some-key-id>';
+    my $passphrase = '<passphrase-for-key>';
+    my @data = ('lines to', 'be signed');
+    my ($signature, $version) = pgp_sign ($keyid, $passphrase, @data);
+    my $signer = pgp_verify ($signature, $version, @data);
+    my @errors = PGP::Sign::pgp_error;
 
 =head1 DESCRIPTION
 
