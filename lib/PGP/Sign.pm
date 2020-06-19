@@ -20,7 +20,10 @@
 ##############################################################################
 
 package PGP::Sign;
-require 5.003;
+
+use 5.010;
+use strict;
+use warnings;
 
 use Carp qw(croak);
 use Exporter ();
@@ -28,7 +31,6 @@ use File::Temp ();
 use IO::Handle;
 use IPC::Run qw(finish run start timeout);
 
-use strict;
 use vars qw(@ERROR @EXPORT @EXPORT_OK @ISA $MUNGE $PGPS $PGPV $PGPPATH
             $PGPSTYLE $TMPDIR $VERSION);
 
