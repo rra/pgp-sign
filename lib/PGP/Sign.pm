@@ -50,8 +50,8 @@ our $MUNGE = 0;
 
 # The default path to PGP.  PGPS is for signing, PGPV is for verifying (with
 # PGP v5 these are two different commands).
-our $PGPS = '/usr/bin/gpg1';
-our $PGPV = '/usr/bin/gpg1';
+our $PGPS = 'gpg1';
+our $PGPV = 'gpg1';
 
 # The path to the directory containing the key ring.  If not set, defaults to
 # $ENV{GNUPGHOME} or $HOME/.gnupg.
@@ -423,13 +423,13 @@ call):
 
 =item $PGP::Sign::PGPS
 
-The path to the program to use to generate signatures.  Defaults to
-C</usr/bin/gpg1>.
+The path to the program to use to generate signatures.  Defaults to searching
+for C<gpg1> on the user's PATH.
 
 =item $PGP::Sign::PGPV
 
-The path to the program to use to verify signatures.  Defaults to
-C</usr/bin/gpg1>.
+The path to the program to use to verify signatures.  Defaults to searching
+for C<gpg1> on the user's PATH.
 
 =item $PGP::Sign::PGPPATH
 

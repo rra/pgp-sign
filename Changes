@@ -35,8 +35,8 @@ PGP::Sign 1.00 (unreleased)
     ExtUtils::MakeMaker and should improve the indexing of the module.
     Move the module into a lib structure and the test suite data into
     t/data.  Eliminate all of the prompting and command-line parameters to
-    set the PGP style and path to programs; this will instead be
-    discovered or configured at runtime.
+    set the PGP style and path to programs; instead, PGP::Sign will
+    default to using gpg1 from the user's PATH.
 
     Rewrite ChangeLog into a more conventional Changes file.
 
