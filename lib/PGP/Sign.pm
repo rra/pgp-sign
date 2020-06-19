@@ -1,6 +1,6 @@
 # PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
 #
-# Copyright 1997-2000, 2002, 2004, 2018 Russ Allbery <rra@cpan.org>
+# Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -25,6 +25,7 @@
 package PGP::Sign;
 require 5.003;
 
+use Carp qw(croak);
 use Exporter ();
 use Fcntl qw(F_SETFD O_WRONLY O_CREAT O_EXCL);
 use FileHandle ();
@@ -57,14 +58,12 @@ $MUNGE = 0;
 $PGPS = '/usr/bin/gpg1';
 $PGPV = '/usr/bin/gpg1';
 
-# The path to the directory containing the key ring.  If not set, PGP (v2, v5,
-# or v6) defaults to $ENV{PGPPATH} or $HOME/.pgp.  GPG defaults to
-# $ENV{GNUPGHOME} or $HOME/.gnupg.  Setting this will also be made to affect
-# GPG.
+# The path to the directory containing the key ring.  If not set, defaults to
+# $ENV{GNUPGHOME} or $HOME/.gnupg.
 $PGPPATH = '';
 
-# What style of PGP invocation to use by default.  Allowable values are PGP2,
-# PGP5, PGP6, and GPG.  This is picked up at install time.
+# What style of PGP invocation to use by default.  The only allowable value is
+# GPG.
 $PGPSTYLE = 'GPG';
 
 # The directory in which temporary files should be created.
@@ -169,27 +168,20 @@ sub pgp_sign {
     # Ignore SIGPIPE, since we're going to be talking to PGP.
     local $SIG{PIPE} = 'IGNORE';
 
-    # Figure out what command line we'll be using.  PGP v6 and PGP v2 use
-    # compatible syntaxes for what we're trying to do.  PGP v5 would have,
-    # except that the -s option isn't valid when you call pgps.  *sigh*
-    my @command;
-    if ($PGPSTYLE eq 'PGP5') {
-        @command = ($PGPS, '+batchmode', '-baft', '-u', $keyid);
-    } elsif ($PGPSTYLE eq 'GPG') {
-        @command = ($PGPS, '--detach-sign', '--armor', '--textmode',
-                    '--batch', '--force-v3-sigs', '-u', $keyid);
-    } else {
-        @command = ($PGPS, '+batchmode', '-sbaft', '-u', $keyid);
+    # Figure out what command line we'll be using.
+    if ($PGPSTYLE ne 'GPG') {
+        croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
+    my @command = ($PGPS, '--detach-sign', '--armor', '--textmode',
+                   '--batch', '--force-v3-sigs', '-u', $keyid);
 
     # We need to send the password to PGP, but we don't want to use either the
     # command line or an environment variable, since both may expose us to
     # snoopers on the system.  So we create a pipe, stick the password in it,
-    # and then pass the file descriptor to PGP.  PGP wants to know about this
-    # in an environment variable; GPG uses a command-line flag.  5.005_03
-    # started setting close-on-exec on file handles > $^F, so we need to clear
-    # that here (but ignore errors on platforms where fcntl or F_SETFD doesn't
-    # exist, if any).
+    # and then pass the file descriptor to GnuPG.  5.005_03 started setting
+    # close-on-exec on file handles > $^F, so we need to clear that here (but
+    # ignore errors on platforms where fcntl or F_SETFD doesn't exist, if
+    # any).
     my $passfh = new FileHandle;
     my $writefh = new FileHandle;
     pipe ($passfh, $writefh);
@@ -197,17 +189,12 @@ sub pgp_sign {
     print $writefh $passphrase;
     close $writefh;
     local $ENV{PGPPASSFD};
-    if ($PGPSTYLE eq 'GPG') {
-        push (@command, '--passphrase-fd', $passfh->fileno);
-    } else {
-        $ENV{PGPPASSFD} = $passfh->fileno ();
-    }
+    push (@command, '--passphrase-fd', $passfh->fileno);
 
     # Fork off a pgp process that we're going to be feeding data to, and tell
     # it to just generate a signature using the given key id and pass phrase.
     # Set PGPPATH if desired.
-    local $ENV{PGPPATH} = $PGPPATH if ($PGPPATH && $PGPSTYLE ne 'GPG');
-    if ($PGPPATH && $PGPSTYLE eq 'GPG') {
+    if ($PGPPATH) {
         push (@command, '--homedir', $PGPPATH);
     }
     my $pgp = new FileHandle;
@@ -239,10 +226,8 @@ sub pgp_sign {
     }
 
     # Now, clean up the returned signature and return it, along with the
-    # version number if desired.  PGP v2 calls this a PGP MESSAGE, whereas PGP
-    # v5 and v6 and GPG both (more correctly) call it a PGP SIGNATURE, so
-    # accept either.
-    while ((shift @signature) !~ /-----BEGIN PGP \S+-----\n/) {
+    # version number if desired.
+    while ((shift @signature) !~ /-----BEGIN PGP SIGNATURE-----\n/) {
         unless (@signature) {
             @ERROR = ("No signature from PGP (command not found?)\n");
             return undef;
@@ -281,9 +266,6 @@ sub pgp_verify {
     # much easier.  It would be nice to do this without having to use
     # temporary files, but I don't see any way to do so without running into
     # mangling problems.
-    #
-    # PGP v5 *requires* there be some subheader or another.  *sigh*  So we
-    # supply one if Version isn't given.  :)
     my $umask = umask 077;
     my $filename = $TMPDIR . '/pgp' . time . '.' . $$;
     my $sigfile = new FileHandle "$filename.asc", O_WRONLY|O_EXCL|O_CREAT;
@@ -291,22 +273,12 @@ sub pgp_verify {
         @ERROR = ("Unable to open temp file $filename.asc: $!\n");
         return undef;
     }
-    if ($PGPSTYLE eq 'PGP2') {
-        print $sigfile "-----BEGIN PGP MESSAGE-----\n";
-    } else {
-        print $sigfile "-----BEGIN PGP SIGNATURE-----\n";
-    }
+    print $sigfile "-----BEGIN PGP SIGNATURE-----\n";
     if (defined $version) {
         print $sigfile "Version: $version\n";
-    } elsif ($PGPSTYLE eq 'PGP5') {
-        print $sigfile "Comment: Use GnuPG; it's better :)\n";
     }
     print $sigfile "\n", $signature;
-    if ($PGPSTYLE eq 'PGP2') {
-        print $sigfile "\n-----END PGP MESSAGE-----\n";
-    } else {
-        print $sigfile "\n-----END PGP SIGNATURE-----\n";
-    }
+    print $sigfile "\n-----END PGP SIGNATURE-----\n";
     close $sigfile;
     my $datafile = new FileHandle "$filename", O_WRONLY|O_EXCL|O_CREAT;
     unless ($datafile) {
@@ -319,24 +291,20 @@ sub pgp_verify {
     close $datafile;
 
     # Figure out what command line we'll be using.
-    my @command;
-    if ($PGPSTYLE eq 'GPG') {
-        @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
-                    '--logger-fd=1');
-    } else {
-        @command = ($PGPV, '+batchmode');
+    if ($PGPSTYLE ne 'GPG') {
+        croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
+    my @command = ($PGPV, '--batch', '--verify', '--quiet' ,'--status-fd=1',
+                   '--logger-fd=1');
 
     # Now, call PGP to check the signature.  Because we've written everything
     # out to a file, this is actually fairly simple; all we need to do is grab
-    # stdout.  PGP prints its banner information to stderr, so just ignore
-    # stderr.  Set PGPPATH if desired.
-    local $ENV{PGPPATH} = $PGPPATH if ($PGPPATH && $PGPSTYLE ne 'GPG');
-    if ($PGPPATH && $PGPSTYLE eq 'GPG') {
+    # stdout.
+    if ($PGPPATH) {
         push (@command, '--homedir', $PGPPATH);
     }
     push (@command, "$filename.asc");
-    push (@command, $filename) unless $PGPSTYLE eq 'PGP5';
+    push (@command, $filename);
     my $pgp = new FileHandle;
     my $output = new FileHandle;
     my $pid = eval { open3 ($pgp, $output, $output, @command) };
@@ -348,47 +316,18 @@ sub pgp_verify {
     close $pgp;
 
     # Check for the message that gives us the key status and return the
-    # appropriate thing to our caller.  This part is a zoo due to all of the
-    # different formats used.  GPG has finally done the right thing and
-    # implemented a separate status stream with parseable data.
+    # appropriate thing to our caller.
     #
-    # Partly from pgpverify, by David Lawrence <tale@isc.org>:
-    #
-    # MIT PGP 2.6.2 and PGP 6.5.2:
-    #   Good signature from user "Russ Allbery <rra@cpan.org>".
-    # ViaCrypt PGP 4.0:
-    #   Good signature from user:  Russ Allbery <rra@cpan.org>
-    # PGP 5.0:
-    #   Good signature made 1999-02-10 03:29 GMT by key:
-    #     1024 bits, Key ID 0AFC7476, Created 1999-02-10
-    #      "Russ Allbery <rra@cpan.org>"
-    # GPG 1.0.1 (and 0.9.2):
-    #   gpg: Good signature from "Russ Allbery <rra@cpan.org>"
-    #
-    # Also, PGP v2 prints out "Bad signature" while PGP v5 uses "BAD
-    # signature" and PGP v6 reverts back to "Bad signature".
+    # GPG 1.4.23
+    #   [GNUPG:] GOODSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
+    #   [GNUPG:] BADSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
     local $_;
     local $/ = '';
     my $signer;
     while (<$output>) {
-        if ($PGPSTYLE eq 'GPG') {
-            if (/\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
-                $signer = $1;
-                last;
-            }
-        } else {
-            if (/^Good signature from user(?::\s+(.*)|\s+\"(.*)\"\.)$/m) {
-                $signer = $+;
-                last;
-            } elsif (/^Good signature made .* by key:\n.+\n\s+\"(.*)\"/m) {
-                $signer = $1;
-                last;
-            } elsif (/^\S+: Good signature from \"(.*)\"/m) {
-                $signer = $1;
-                last;
-            } elsif (/^(?:\S+: )?Bad signature /im) {
-                last;
-            }
+        if (/\[GNUPG:\]\s+GOODSIG\s+\S+\s+(.*)/) {
+            $signer = $1;
+            last;
         }
     }
     close $pgp;
@@ -432,9 +371,7 @@ namely, generate and check detached PGP signatures for some arbitrary data.
 It doesn't do encryption, it doesn't manage keyrings, it doesn't verify
 signatures, it just signs things.  This is ideal for applications like
 PGPMoose or control message generation that just need a fast signing
-mechanism.  It supports versions 2.6, 5.0, and 6.5.2 of PGP, as well as
-GnuPG, and therefore supports any of the signature types understood by those
-programs provided they are installed.
+mechanism.  It currently only supports GnuPG v1.
 
 The interface is very simple; just call pgp_sign() with a key ID, a pass
 phrase, and some data, or call pgp_verify() with a signature (in the form
@@ -465,8 +402,8 @@ signature).  Warning:  It's expected that in the future this interface will
 change, and pgp_sign() will instead return a list consisting of the
 ASCII-armored block and all headers found in the armor.
 
-If you're using GnuPG, pgp_sign() will pass it the option B<--force-v3-sigs>
-so that it will generate PGP 5.0-compatible signatures.
+pgp_sign() will pass it the option B<--force-v3-sigs> so that it will generate
+PGP 5.0-compatible signatures.
 
 pgp_sign() will return undef in the event of any sort of error.
 
@@ -487,38 +424,25 @@ call):
 
 =item $PGP::Sign::PGPS
 
-The path to the program to use to generate signatures.  This is set at the
-time of installation, but can be overridden.
+The path to the program to use to generate signatures.  Defaults to
+C</usr/bin/gpg1>.
 
 =item $PGP::Sign::PGPV
 
-The path to the program to use to verify signatures.  This is set at the
-time of installation, but can be overridden.  There are two separate
-variables since PGP 5.0 uses two separate program names for signing and
-verifying; for PGP 2.6, 6.5.2, or GnuPG, just set both this and
-$PGP::Sign::PGPS to the same value.
+The path to the program to use to verify signatures.  Defaults to
+C</usr/bin/gpg1>.
 
 =item $PGP::Sign::PGPPATH
 
-The path to a directory containing the PGP key rings that should be used.
-If this isn't set, all versions of PGP will use the value of the environment
-variable PGPPATH or F<$HOME/.pgp> (the default).  GnuPG will use the value
-of the environment variable GNUPGHOME or F<$HOME/.gnupg>.  Note that PGP
-when signing may want to write F<randseed.bin> (or F<randseed.rnd>) in this
-directory if there isn't already a random seed there, so if you're
-encountering problems with signing, make sure the directory PGP is using is
-writeable by the user doing the signing.  Note also that if you're using
-GnuPG and the Entropy Gathering Daemon (egd), the entropy socket or a link
-to it must be located in this directory.
+The path to a directory containing the PGP key rings that should be used.  If
+this isn't set, GnuPG will use the value of the environment variable GNUPGHOME
+or F<$HOME/.gnupg>.  If you're using GnuPG and the Entropy Gathering Daemon
+(egd), the entropy socket or a link to it must be located in this directory.
 
 =item $PGP::Sign::PGPSTYLE
 
 What style of command line arguments and responses to expect from PGP.  The
-only three valid values for this variable are "PGP2" for PGP 2.6 behavior,
-"PGP5" for PGP 5.0 behavior, "PGP6" for PGP 6.5 behavior, and "GPG" for
-GnuPG behavior.  What command line arguments PGP::Sign uses when running PGP
-are entirely determined by this variable.  It is set at the time of
-installation, but can be overridden.
+only valid value for this variable is "GPG" for GnuPG behavior.
 
 =item $PGP::Sign::TMPDIR
 
@@ -540,12 +464,6 @@ whitespace below.
 
 =over 4
 
-=item PGPPATH
-
-If $PGP::Sign::PGPPATH is set and $PGP::Sign::PGPSTYLE is something other
-than "GPG", PGP::Sign sets PGPPATH to tell PGP where to find its key rings.
-(GnuPG uses a command line argument instead.)
-
 =item TMPDIR
 
 The directory in which to create temporary files.  Can be overridden by
@@ -553,9 +471,9 @@ changing $PGP::Sign::TMPDIR.  If not set, defaults F</tmp>.
 
 =back
 
-In addition, all environment variables that PGP normally honors will be
-passed along to PGP and will likely have their expected effects.  This
-includes PGPPATH, unless it is overridden (see above).
+In addition, all environment variables that GnuPG normally honors will be
+passed along to GnuPG and will likely have their expected effects.  This
+includes GNUPGHOME, unless it is overridden by setting C<$PGP::Sign::PGPPATH>.
 
 =head1 DIAGNOSTICS
 
@@ -653,7 +571,7 @@ substandard operating systems.
 
 =head1 SEE ALSO
 
-pgp(1), pgps(1), pgpv(1), gpg(1)
+gpg1(1)
 
 RFC 2440, L<http://www.rfc-editor.org/rfc/rfc2440.txt>, which specifies the
 OpenPGP message format.
