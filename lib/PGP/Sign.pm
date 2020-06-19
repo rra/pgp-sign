@@ -1,11 +1,6 @@
-# PGP::Sign -- Create a PGP signature for data, securely.  -*- perl -*-
+# Create a PGP signature for data, securely.
 #
-# Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>
-#
-# This program is free software; you may redistribute it and/or modify it
-# under the same terms as Perl itself.
-#
-#                     THIS IS NOT A GENERAL PGP MODULE
+# THIS IS NOT A GENERAL PGP MODULE.
 #
 # For a general PGP module that handles encryption and decryption, key ring
 # management, and all of the other wonderful things you want to do with PGP,
@@ -17,6 +12,8 @@
 # And it must follow, as the night the day,
 # Thou canst not then be false to any man.
 #                               -- William Shakespeare, _Hamlet_
+#
+# SPDX-License-Identifier: GPL-1.0-or-later OR Artistic-1.0-Perl
 
 ##############################################################################
 # Modules and declarations
@@ -569,28 +566,6 @@ system on which you're running this module supports passing an open pipe to
 an exec()ed subprocess.  This may cause portability problems to certain
 substandard operating systems.
 
-=head1 SEE ALSO
-
-gpg1(1)
-
-RFC 2440, L<http://www.rfc-editor.org/rfc/rfc2440.txt>, which specifies the
-OpenPGP message format.
-
-The current version of this module is always available from its web site at
-L<http://www.eyrie.org/~eagle/software/pgp-sign/>.
-
-=head1 AUTHOR
-
-Russ Allbery <rra@cpan.org>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 1997, 1998, 1999, 2000, 2002, 2004 Russ Allbery
-<rra@cpan.org>.
-
-This program is free software; you may redistribute it and/or modify it
-under the same terms as Perl itself.
-
 =head1 HISTORY
 
 Based heavily on work by Andrew Gierth and benefitting greatly from input,
@@ -605,4 +580,29 @@ another version released came from Andrew Ford.  Thank you.
 Original support for GnuPG from Todd Underwood and Monte Mitzelfelt.  Code
 for using --status-fd based on code by Marco d'Itri.
 
+=head1 AUTHOR
+
+Russ Allbery <rra@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>
+
+This program is free software; you may redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+gpg1(1)
+
+RFC 2440, L<http://www.rfc-editor.org/rfc/rfc2440.txt>, which specifies the
+OpenPGP message format.
+
+The current version of this module is always available from its web site at
+L<http://www.eyrie.org/~eagle/software/pgp-sign/>.
+
 =cut
+
+# Local Variables:
+# copyright-at-end-flag: t
+# End:
