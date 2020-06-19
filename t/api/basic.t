@@ -9,9 +9,8 @@
 #
 # SPDX-License-Identifier: GPL-1.0-or-later OR Artistic-1.0-Perl
 
-use 5.010;
+use 5.020;
 use autodie;
-use strict;
 use warnings;
 
 use IO::File;
