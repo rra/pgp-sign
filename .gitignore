@@ -1,9 +1,8 @@
 /Build
 /Build.bat
 /MANIFEST.bak
-/META.json
-/META.yml
 /MYMETA.json
+/MYMETA.json.lock
 /MYMETA.yml
 /PGP-Sign-*/
 /PGP-Sign-*.tar.gz
