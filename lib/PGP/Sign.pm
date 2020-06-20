@@ -30,39 +30,13 @@ use Exporter qw(import);
 use File::Temp ();
 use IO::Handle;
 use IPC::Run qw(finish run start timeout);
+use Scalar::Util qw(blessed);
 
 # Export pgp_sign and pgp_verify by default for backwards compatibility.
 ## no critic (Modules::ProhibitAutomaticExportation)
 our @EXPORT    = qw(pgp_sign pgp_verify);
 our @EXPORT_OK = qw(pgp_error);
 ## use critic
-
-##############################################################################
-# Global variables
-##############################################################################
-
-# The text of any errors resulting from the last call to pgp_sign().
-our @ERROR = ();
-
-# Whether or not to perform some standard munging to make other signing and
-# checking routines happy.
-our $MUNGE = 0;
-
-# The default path to PGP.  PGPS is for signing, PGPV is for verifying (with
-# PGP v5 these are two different commands).
-our $PGPS = 'gpg1';
-our $PGPV = 'gpg1';
-
-# The path to the directory containing the key ring.  If not set, defaults to
-# $ENV{GNUPGHOME} or $HOME/.gnupg.
-our $PGPPATH;
-
-# What style of PGP invocation to use by default.  The only allowable value is
-# GPG.
-our $PGPSTYLE = 'GPG1';
-
-# The directory in which temporary files should be created.
-our $TMPDIR;
 
 # The flags to use with the various PGP styles.
 my %SIGN_FLAGS = (
@@ -105,7 +79,41 @@ my %VERIFY_FLAGS = (
 );
 
 ##############################################################################
-# Implementation
+# Old global variables
+##############################################################################
+
+# These variables are part of the legacy PGP::Sign interface and are
+# maintained for backward compatibility.  They are only used by the legacy
+# pgp_sign and pgp_verify functions, not by the new object-oriented API.
+
+# Whether or not to perform some standard whitespace munging to make other
+# signing and checking routines happy.
+our $MUNGE = 0;
+
+# The default path to PGP.  PGPS is for signing, PGPV is for verifying.
+# (There's no reason to use separate commands any more, but with PGPv5 these
+# were two different commands, so this became part of the legacy API.)
+our $PGPS;
+our $PGPV;
+
+# The path to the directory containing the key ring.  If not set, defaults to
+# $ENV{GNUPGHOME} or $HOME/.gnupg.
+our $PGPPATH;
+
+# What style of PGP invocation to use by default.  If not set, defaults to the
+# default style for the object-oriented API.
+our $PGPSTYLE;
+
+# The directory in which temporary files should be created.  If not set,
+# defaults to whatever File::Temp decides to use.
+our $TMPDIR;
+
+# Used by pgp_sign and pgp_verify to store errors returned by the
+# object-oriented API so that they can be returned via pgp_error.
+my @ERROR = ();
+
+##############################################################################
+# Utility functions
 ##############################################################################
 
 # print with error checking and an explicit file handle.  autodie
@@ -117,134 +125,185 @@ my %VERIFY_FLAGS = (
 #
 # Returns: undef
 #  Throws: Text exception on output failure
-sub print_fh {
+sub _print_fh {
     my ($fh, @args) = @_;
     print {$fh} @args or croak('print failed');
     return;
 }
 
+##############################################################################
+# Object-oriented interface
+##############################################################################
+
+# Create a new PGP::Sign object encapsulating the configuration.
+#
+# $args_ref - Anonymous hash of arguments with the following keys:
+#   home   - Path to the GnuPG homedir containing keyrings
+#   munge  - Boolean indicating whether to munge whitespace
+#   path   - Path to the GnuPG binary to use
+#   style  - Style of OpenPGP backend to use
+#   tmpdir - Directory to use for temporary files
+#
+# Returns: Newly created object
+#  Throws: Text exception for an invalid OpenPGP backend style
+sub new {
+    my ($class, $args_ref) = @_;
+
+    # Check the style argument.
+    my $style = $args_ref->{style} || 'GPG';
+    if ($style ne 'GPG' && $style ne 'GPG1') {
+        croak("Unknown OpenPGP backend style $style");
+    }
+
+    # If path is not given, set a default based on the style.
+    my $path = $args_ref->{path} // lc($style);
+
+    # Create and return the object.
+    my $self = {
+        home   => $args_ref->{home},
+        munge  => $args_ref->{munge},
+        path   => $path,
+        style  => $style,
+        tmpdir => $args_ref->{tmpdir},
+    };
+    bless($self, $class);
+    return $self;
+}
+
 # This function actually sends the data to a file handle.  It's necessary to
 # implement munging (stripping trailing spaces on a line).
-sub output {
-    my ($fh, $string) = @_;
-    state $spaces = q{};
-
-    # If this is the last bit of data, clear the saved state.
-    if (!defined($string)) {
-        $spaces = q{};
-        return;
-    }
+#
+# $fh     - The file handle to which to write the data
+# $string - The data to write
+sub _write_string {
+    my ($self, $fh, $string) = @_;
 
     # If there were any left-over spaces from the last invocation, prepend
     # them to the string and clear them.
-    if ($spaces) {
-        $string = $spaces . $string;
-        $spaces = q{};
+    if ($self->{spaces}) {
+        $string = $self->{spaces} . $string;
+        $self->{spaces} = q{};
     }
 
     # If whitespace munging is enabled, strip any trailing whitespace from
     # each line of the string for which we've seen the newline.  Then, remove
     # and store any spaces at the end of the string, since the newline may be
-    # in the next chunk.  If there turn out to be no further chunks, this
-    # removes any trailing whitespace on the last line without a newline,
-    # which is still correct.
-    if ($MUNGE) {
+    # in the next chunk.
+    #
+    # If there turn out to be no further chunks, this removes any trailing
+    # whitespace on the last line without a newline, which is still correct.
+    if ($self->{munge}) {
         $string =~ s{ [ ]+ \n }{\n}xmsg;
         if ($string =~ s{ ([ ]+) \Z }{}xms) {
-            $spaces = $1;
+            $self->{spaces} = $1;
         }
     }
 
-    print_fh($fh, $string);
+    _print_fh($fh, $string);
     return;
 }
 
 # This is our generic "take this data and shove it" routine, used both for
-# signature generation and signature checking.  The first argument is the file
-# handle to shove all the data into, and the remaining arguments are sources
-# of data.  Scalars, references to arrays, references to FileHandle or
-# IO::Handle objects, file globs, references to code, and references to file
-# globs are all supported as ways to get the data, and at most one line at a
-# time is read (cutting down on memory usage).
+# signature generation and signature checking.  Scalars, references to arrays,
+# references to IO::Handle objects, file globs, references to code, and
+# references to file globs are all supported as ways to get the data, and at
+# most one line at a time is read (cutting down on memory usage).
 #
 # References to code are an interesting subcase.  A code reference is executed
-# repeatedly, whatever it returns being passed to PGP using the ORS specified
-# if any, until it returns undef.
-sub write_data {
-    my ($fh, @sources) = @_;
+# repeatedly, passing whatever it returns to GnuPG, until it returns undef.
+#
+# $fh      - The file handle to which to write the data
+# @sources - The data to write, in any of those formats
+sub _write_data {
+    my ($self, $fh, @sources) = @_;
+    $self->{spaces} = q{};
 
-    # Deal with all of our possible sources of input, one at a time.  We
-    # really want perl 5.004 here, since we want UNIVERSAL::isa().
-    # Unfortunately, we can't rely on 5.004 yet.  *But*, the main reason we
-    # want isa() is to handle the various derived IO::Handle classes, and
-    # 5.003 should only have FileHandle, so we can hack our way around that.
+    # Deal with all of our possible sources of input, one at a time.
+    #
     # We can't do anything interesting or particularly "cool" with references
     # to references, so those we just print.  (Perl allows circular
     # references, so we can't just dereference references to references until
-    # we get something interesting.)  Hashes are treated like arrays.
+    # we get something interesting.)
     for my $source (@sources) {
-        if (ref($source) eq 'ARRAY' || ref($source) eq 'HASH') {
+        if (ref($source) eq 'ARRAY') {
             for my $chunk (@$source) {
-                output($fh, $chunk);
+                $self->_write_string($fh, $chunk);
             }
         } elsif (ref($source) eq 'GLOB' || ref(\$source) eq 'GLOB') {
             while (defined(my $chunk = <$source>)) {
-                output($fh, $chunk);
+                $self->_write_string($fh, $chunk);
             }
         } elsif (ref($source) eq 'SCALAR') {
-            output($fh, $$source);
+            $self->_write_string($fh, $$source);
         } elsif (ref($source) eq 'CODE') {
             while (defined(my $chunk = &$source())) {
-                output($fh, $chunk);
+                $self->_write_string($fh, $chunk);
             }
-        } elsif (ref($source) eq 'REF') {
-            output($fh, $source);
-        } elsif (ref($source)) {
+        } elsif (blessed($source)) {
             if ($source->isa('IO::Handle')) {
                 while (defined(my $chunk = <$source>)) {
-                    output($fh, $chunk);
+                    $self->_write_string($fh, $chunk);
                 }
             } else {
-                output($fh, $source);
+                $self->_write_string($fh, $source);
             }
         } else {
-            output($fh, $source);
+            $self->_write_string($fh, $source);
         }
     }
-
-    # Indicate end of input to clear any whitespace munging state.
-    output($fh, undef);
     return;
 }
 
-# Create a detached signature for the given data.  The first argument should
-# be a key id and the second argument the PGP passphrase, and then all
-# remaining arguments are considered to be part of the data to be signed and
-# are handed off to write_data().
+# Construct the command for signing.  This will expect the passphrase on file
+# descriptor 3.
 #
-# In a scalar context, the signature is returned as an ASCII-armored block
-# with embedded newlines.  In array context, a list consisting of the
-# signature and the PGP version number is returned.  Returns undef in the
-# event of an error, and the error text is then stored in @PGP::Sign::ERROR
-# and can be retrieved with pgp_error().
-sub pgp_sign {
-    my ($keyid, $passphrase, @sources) = @_;
-    undef @ERROR;
+# $keyid - The OpenPGP key ID with which to sign
+#
+# Returns: List of the command and arguments.
+sub _build_sign_command {
+    my ($self, $keyid) = @_;
+    my @command = ($self->{path}, '-u', $keyid, qw(--passphrase-fd 3));
+    push(@command, @{ $SIGN_FLAGS{ $self->{style} } });
+    if ($self->{home}) {
+        push(@command, '--homedir', $self->{home});
+    }
+    return @command;
+}
 
-    # Ignore SIGPIPE, since we're going to be talking to PGP.
+# Construct the command for verification.  This will send all status and
+# logging to standard output.
+#
+# $signature_file - Path to the file containing the signature
+# $data_file      - Path to the file containing the signed data
+#
+# Returns: List of the command and arguments.
+sub _build_verify_command {
+    my ($self, $signature_file, $data_file) = @_;
+    my @command = ($self->{path}, qw(--status-fd 1 --logger-fd 1));
+    push(@command, @{ $VERIFY_FLAGS{ $self->{style} } });
+    if ($self->{home}) {
+        push(@command, '--homedir', $self->{home});
+    }
+    push(@command, $signature_file, $data_file);
+    return @command;
+}
+
+# Create a detached signature for the given data.
+#
+# $keyid      - GnuPG key ID to use to sign the data
+# $passphrase - Passphrase for the GnuPG key
+# @sources    - The data to sign (see _write_data for more information)
+#
+# Returns: The signature as an ASCII-armored block with embedded newlines
+#  Throws: Text exception on failure that includes the GnuPG output
+sub sign {
+    my ($self, $keyid, $passphrase, @sources) = @_;
+
+    # Ignore SIGPIPE, since we're going to be talking to GnuPG.
     local $SIG{PIPE} = 'IGNORE';
 
-    # Figure out what command line we'll be using.
-    if ($PGPSTYLE ne 'GPG' && $PGPSTYLE ne 'GPG1') {
-        croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
-    }
-    my @command = (
-        $PGPS, @{ $SIGN_FLAGS{$PGPSTYLE} },
-        '-u', $keyid, qw(--passphrase-fd 3),
-    );
-    if ($PGPPATH) {
-        push(@command, '--homedir', $PGPPATH);
-    }
+    # Build the command to run.
+    my @command = $self->_build_sign_command($keyid);
 
     # Fork off a pgp process that we're going to be feeding data to, and tell
     # it to just generate a signature using the given key id and pass phrase.
@@ -259,89 +318,84 @@ sub pgp_sign {
         '2>', \$errors,
     );
     #>>>
-    write_data($writefh, @sources);
+    $self->_write_data($writefh, @sources);
     close($writefh);
+
+    # Get the return status and raise an exception on failure.
     if (!finish($h)) {
         my $status = $h->result();
-        @ERROR = ($errors,
-            "Execution of $command[0] failed with status $status.\n");
-        return;
+        $errors .= "Execution of $command[0] failed with status $status";
+        croak($errors);
     }
 
-    # Now, clean up the returned signature and return it, along with the
-    # version number if desired.
+    # The resulting signature will look something like this:
+    #
+    # -----BEGIN PGP SIGNATURE-----
+    # Version: GnuPG v0.9.2 (SunOS)
+    # Comment: For info see http://www.gnupg.org
+    #
+    # iEYEARECAAYFAjbA/fsACgkQ+YXjQAr8dHYsMQCgpzOkRRopdW0nuiSNMB6Qx2Iw
+    # bw0AoMl82UxQEkh4uIcLSZMdY31Z8gtL
+    # =Dj7i
+    # -----END PGP SIGNATURE-----
+    #
+    # Find and strip the marker line for the start of the signature.
     my @signature = split(m{\n}xms, $signature);
     while ((shift @signature) !~ m{-----BEGIN [ ] PGP [ ] SIGNATURE-----}xms) {
         if (!@signature) {
-            @ERROR = ("No signature from PGP (command not found?)\n");
-            return;
+            croak('No signature returned by GnuPG');
         }
     }
-    my $version;
+
+    # Strip any headers off the signature.  Thankfully all of the important
+    # data is encoded into the signature itself, so the headers aren't needed.
     while (@signature && $signature[0] ne q{}) {
-        my $header = shift(@signature);
-        if ($header =~ m{ ^ Version: \s+ (.*?) \s* \z }xms) {
-            $version = $1;
-        }
+        shift(@signature);
     }
     shift(@signature);
+
+    # Remove the trailing marker line.
     pop(@signature);
-    $signature = join("\n", @signature);
-    return wantarray ? ($signature, $version) : $signature;
+
+    # Everything else is the signature that we want.
+    return join("\n", @signature);
 }
 
-# Check a detatched signature for given data.  Takes a signature block (in the
-# form of an ASCII-armored string with embedded newlines), a version number
-# (which may be undef), and some number of data sources that write_data() can
-# handle and returns the key id of the signature, the empty string if the
-# signature didn't check, and undef in the event of an error.  In the event of
-# some sort of an error, we stick the error in @ERROR.
-sub pgp_verify {
-    my ($signature, $version, @sources) = @_;
+# Check a detatched signature for given data.
+#
+# $signature - The signature as an ASCII-armored string with embedded newlines
+# @sources   - The data over which to check the signature
+#
+# Returns: The human-readable key ID of the signature, or an empty string if
+#          the signature did not verify
+#  Throws: Text exception on an error other than a bad signature
+sub verify {
+    my ($self, $signature, @sources) = @_;
     chomp($signature);
-    undef @ERROR;
 
     # Ignore SIGPIPE, since we're going to be talking to PGP.
     local $SIG{PIPE} = 'IGNORE';
 
-    # Because this is a detached signature, we actually need to save both the
-    # signature and the data to files and then run PGP on the signature file
-    # to make it verify the signature.  Because this is a detached signature,
-    # though, we don't have to do any data mangling, which makes our lives
-    # much easier.  It would be nice to do this without having to use
-    # temporary files, but I don't see any way to do so without running into
-    # mangling problems.
-    my @tmpdir = defined($TMPDIR) ? (DIR => $TMPDIR) : ();
+    # To verify a detached signature, we need to save both the signature and
+    # the data to files and then run GnuPG on the pair of files.  There
+    # doesn't appear to be a way to feed both the data and the signature in on
+    # file descriptors.
+    my @tmpdir = defined($self->{tmpdir}) ? (DIR => $self->{tmpdir}) : ();
     my $sigfh  = File::Temp->new(@tmpdir, SUFFIX => '.asc');
-    print_fh($sigfh, "-----BEGIN PGP SIGNATURE-----\n");
-    if (defined $version) {
-        print_fh($sigfh, "Version: $version\n");
-    }
-    print_fh($sigfh, "\n", $signature);
-    print_fh($sigfh, "\n-----END PGP SIGNATURE-----\n");
+    _print_fh($sigfh, "-----BEGIN PGP SIGNATURE-----\n");
+    _print_fh($sigfh, "\n", $signature);
+    _print_fh($sigfh, "\n-----END PGP SIGNATURE-----\n");
     close($sigfh);
     my $datafh = File::Temp->new(@tmpdir);
-    write_data($datafh, @sources);
+    $self->_write_data($datafh, @sources);
     close($datafh);
 
-    # Figure out what command line we'll be using.
-    if ($PGPSTYLE ne 'GPG' && $PGPSTYLE ne 'GPG1') {
-        croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
-    }
-    #<<<
-    my @command = (
-        $PGPV, @{ $VERIFY_FLAGS{$PGPSTYLE} },
-        qw(--status-fd 1 --logger-fd 1),
-    );
-    #>>>
-    if ($PGPPATH) {
-        push(@command, '--homedir', $PGPPATH);
-    }
-    push(@command, $sigfh->filename, $datafh->filename);
+    # Build the command to run.
+    my @command
+      = $self->_build_verify_command($sigfh->filename, $datafh->filename);
 
-    # Now, call PGP to check the signature.  Because we've written everything
-    # out to a file, this is actually fairly simple; all we need to do is grab
-    # stdout.
+    # Call GnuPG to check the signature.  Because we've written everything out
+    # to a file, this is fairly simple; just grab stdout.
     my $output;
     run(\@command, '>&', \$output);
     my $status = $?;
@@ -352,6 +406,10 @@ sub pgp_verify {
     # GPG 1.4.23
     #   [GNUPG:] GOODSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
     #   [GNUPG:] BADSIG 7D80315C5736DE75 Russ Allbery <eagle@eyrie.org>
+    #
+    # Note that this returns the human-readable key ID instead of the actual
+    # key ID.  This is a historical wart in the API; a future version will
+    # hopefully add an option to return more accurate signer information.
     for my $line (split(m{\n}xms, $output)) {
         if ($line =~ m{ \[GNUPG:\] \s+ GOODSIG \s+ \S+ \s+ (.*)}xms) {
             return $1;
@@ -361,17 +419,109 @@ sub pgp_verify {
     }
 
     # Neither a good nor a bad signature seen.
-    @ERROR = ($output);
     if ($status != 0) {
-        push(@ERROR, "Execution of $command[0] failed with status $status.\n");
+        $output .= "Execution of $command[0] failed with status $status";
     }
-    return;
+    croak($output);
 }
 
-# Return the errors resulting from the last call to pgp_sign() or pgp_verify()
-# or the empty list if there are none.
+##############################################################################
+# Legacy function API
+##############################################################################
+
+# This is the original API from 0.x versions of PGP::Sign.  It is maintained
+# for backwards compatibility, but is now a wrapper around the object-oriented
+# API that uses the legacy global variables.  The object-oriented API should
+# be preferred for all new code.
+
+# Create a detached signature for the given data.
+#
+# The original API returned the PGP implementation version from the signature
+# headers as the second element of the list returned in array context.  This
+# information is pointless and unnecessary and GnuPG doesn't include that
+# header by default, so the fixed string "GnuPG" is now returned for backwards
+# compatibility.
+#
+# Errors are stored for return by pgp_error(), overwriting any previously
+# stored error.
+#
+# $keyid      - GnuPG key ID to use to sign the data
+# $passphrase - Passphrase for the GnuPG key
+# @sources    - The data to sign (see _write_data for more information)
+#
+# Returns: The signature as an ASCII-armored block in scalar context
+#          The signature and the string "GnuPG" in list context
+#          undef or the empty list on error
+sub pgp_sign {
+    my ($keyid, $passphrase, @sources) = @_;
+    @ERROR = ();
+
+    # Create the signer object.
+    my $signer = PGP::Sign->new(
+        {
+            home   => $PGPPATH,
+            munge  => $MUNGE,
+            path   => $PGPS,
+            style  => $PGPSTYLE,
+            tmpdir => $TMPDIR,
+        }
+    );
+
+    # Do the work, capturing any errors.
+    my $signature = eval { $signer->sign($keyid, $passphrase, @sources) };
+    if ($@) {
+        @ERROR = split(m{\n}xms, $@);
+        return;
+    }
+
+    # Return the results, including a dummy version if desired.
+    return wantarray ? ($signature, 'GnuPG') : $signature;
+}
+
+# Check a detatched signature for given data.
+#
+# $signature - The signature as an ASCII-armored string with embedded newlines
+# @sources   - The data over which to check the signature
+#
+# Returns: The human-readable key ID of the signature
+#          An empty string if the signature did not verify
+#          undef on error
+sub pgp_verify {
+    my ($signature, $version, @sources) = @_;
+    @ERROR = ();
+
+    # Create the verifier object.
+    my $verifier = PGP::Sign->new(
+        {
+            home   => $PGPPATH,
+            munge  => $MUNGE,
+            path   => $PGPV,
+            style  => $PGPSTYLE,
+            tmpdir => $TMPDIR,
+        }
+    );
+
+    # Do the work, capturing any errors.
+    my $signer = eval { $verifier->verify($signature, @sources) };
+    if ($@) {
+        @ERROR = split(m{\n}xms, $@);
+        return;
+    }
+
+    # Return the results.
+    return $signer;
+}
+
+# Retrieve errors from the previous pgp_sign() or pgp_verify() call.
+#
+# Historically the pgp_error() return value in list context had newlines at
+# the end of each line, so add them back in.
+#
+# Returns: A list of GnuPG output and error messages in list context
+#          The block of GnuPG output and error message in scalar context
 sub pgp_error {
-    return wantarray ? @ERROR : join(q{}, @ERROR);
+    my @error_lines = map { "$_\n" } @ERROR;
+    return wantarray ? @error_lines : join(q{}, @error_lines);
 }
 
 ##############################################################################
