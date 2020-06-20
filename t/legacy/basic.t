@@ -15,9 +15,20 @@ use warnings;
 
 use File::Spec;
 use IO::File;
-use Test::More tests => 43;
+use IPC::Cmd qw(can_run);
+use Test::More;
 
-BEGIN { use_ok('PGP::Sign'); }
+# Check that GnuPG is available.  If so, load the module and set the plan.
+BEGIN {
+    if (!can_run('gpg')) {
+        plan skip_all => 'gpg binary not available';
+    } elsif (!can_run('gpg1')) {
+        plan skip_all => 'gpg1 binary not available';
+    } else {
+        plan tests => 43;
+        use_ok('PGP::Sign');
+    }
+}
 
 # Locate our test data directory for later use.
 my $data = 't/data';

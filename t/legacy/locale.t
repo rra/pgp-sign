@@ -17,10 +17,17 @@ use autodie;
 use warnings;
 
 use File::Spec;
-use Test::More tests => 5;
+use IPC::Cmd qw(can_run);
+use Test::More;
 
+# Check that GnuPG is available.  If so, load the module and set the plan.
 BEGIN {
-    use_ok('PGP::Sign', qw(pgp_sign pgp_verify pgp_error));
+    if (!can_run('gpg')) {
+        plan skip_all => 'gpg binary not available';
+    } else {
+        plan tests => 5;
+        use_ok('PGP::Sign', qw(pgp_sign pgp_verify pgp_error));
+    }
 }
 
 # Set the locale.  I use French for testing; this won't be a proper test
