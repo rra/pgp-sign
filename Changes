@@ -10,15 +10,29 @@ PGP::Sign 1.00 (unreleased)
     versions of Perl back to 5.003, which are now impossible to test with
     and are missing many modern Perl features.
 
-    Add support for GnuPG v2.  GnuPG v2 is chosen by setting
-    $PGP::Sign::PGPSTYLE to "GPG".  Be aware that GnuPG v2 does not
-    support creating signatures that can be verified with PGP 2.6.2.  The
-    default setting of $PGP::Sign::PGPSTYLE is "GPG1", which uses GnuPG v1
-    configured to be backward-compatible with PGP 2.6.2.
+    Add a new object-oriented API.  This avoids global variables and
+    global state, provides a simpler API that doesn't require or support
+    the now-obsolete version string, and calls croak on errors.  The
+    legacy API of pgp_sign, pgp_verify, and pgp_error is still supported
+    but is now implemented in terms of the object-oriented API.  The new
+    API should be used for all new code.
 
-    Pass --allow-weak-digest-algos to pgp_sign and pgp_verify so that they
-    can use old keys and verify signatures from old keys, such as those
-    created with PGP 2.6.2.
+    Add support for GnuPG v2.  GnuPG v2 is chosen by setting the style
+    constructor parameter or $PGP::Sign::PGPSTYLE to "GPG", which is now
+    the default.  Be aware that GnuPG v2 does not support creating
+    signatures that can be verified with PGP 2.6.2.  To support older keys
+    and signatures, set the style constructor parameter or
+    $PGP::Sign::PGPSTYLE to "GPG1", which uses GnuPG v1 configured to be
+    backward-compatible with PGP 2.6.2.
+
+    Pass --allow-weak-digest-algos to GnuPG so it can use old keys and
+    verify signatures from old keys, such as those created with PGP 2.6.2.
+
+    pgp_sign, when called in array context, now always returns "GnuPG" as
+    the version string, and the version passed into pgp_verify is always
+    ignored.  Including the OpenPGP implementation version information in
+    signatures is obsolete; GnuPG no longer does it by default and it
+    serves no useful purpose.
 
     When calling pgp_sign multiple times in the same process with
     whitespace munging enabled, trailing whitespace without a newline
@@ -32,8 +46,8 @@ PGP::Sign 1.00 (unreleased)
     Use File::Temp to create temporary files.  This should significantly
     improve the safety of temporary file creation.  The default directory
     for temporary file creation is now whatever directory File::Temp
-    chooses by default.  It can stll be overridden by setting
-    $PGP::Sign::TMPDIR.
+    chooses by default.  It can stll be overridden by setting the tmpdir
+    constructor parameter or $PGP::Sign::TMPDIR.
 
     Rewrite the build system to use Module::Build.  This eliminates the
     spurious VERSION.pm "module" at the top level, which was a hack for

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Basic tests for PGP::Sign functionality.
+# Tests for PGP::Sign whitespace munging.
 #
 # Copyright 1998-2001, 2004, 2007, 2018, 2020 Russ Allbery <rra@cpan.org>
 #
@@ -15,76 +15,70 @@ use warnings;
 
 use File::Spec;
 use IO::File;
-use Test::More tests => 13;
+use IPC::Cmd qw(can_run);
+use Test::More;
 
+# Check that GnuPG is available.  If so, load the module and set the plan.
 BEGIN {
-    use_ok('PGP::Sign', qw(pgp_sign pgp_verify pgp_error));
+    if (!can_run('gpg')) {
+        plan skip_all => 'gpg binary not available';
+    } else {
+        plan tests => 10;
+        use_ok('PGP::Sign');
+    }
 }
-
-# Locate our test data directory for later use.
-my $data = 't/data';
-$PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg1');
 
 # The key ID and pass phrase to use for testing.
 my $keyid      = 'testing';
 my $passphrase = 'testing';
 
+# Create the objects to use for tests, one without munging enabled and one
+# with.
+my $home   = File::Spec->catdir('t', 'data', 'gnupg2');
+my $signer = PGP::Sign->new({ home => $home });
+my $munged = PGP::Sign->new({ home => $home, munge => 1 });
+
 # Sign a message consisting solely of whitespace and verify it.
-my ($signature, $version) = pgp_sign($keyid, $passphrase, q{       });
-is(pgp_verify($signature, $version, q{       }), $keyid, 'Pure whitespace');
+my $signature = $signer->sign($keyid, $passphrase, q{       });
+is($keyid, $signer->verify($signature, q{       }), 'Pure whitespace');
 
 # Do the same with whitespace munging enabled, and verify that it matches the
 # signature of the empty string.
-{
-    local $PGP::Sign::MUNGE = 1;
-    ($signature, $version) = pgp_sign($keyid, $passphrase, q{       });
-}
-is(pgp_verify($signature, $version, q{       }), q{}, 'Munged does not match');
-is(pgp_verify($signature, $version, q{}), $keyid, '...but does match empty');
+$signature = $munged->sign($keyid, $passphrase, q{       });
+is(q{},    $signer->verify($signature, q{       }), 'Munged does not match');
+is($keyid, $signer->verify($signature, q{}),        '...but does match empty');
+is($keyid, $munged->verify($signature, q{       }), '...and munge matches');
+is($keyid, $munged->verify($signature, q{}),        '...either one');
 
 # Put the newline in the next chunk of data and confirm that it is still
 # munged correctly.
 my @message = ('foo    ', "\n  bar   ", "  \nbaz    ");
-{
-    local $PGP::Sign::MUNGE = 1;
-    ($signature, $version) = pgp_sign($keyid, $passphrase, @message);
-}
-is(pgp_verify($signature, $version, "foo\n  bar\nbaz"),
-    $keyid, 'Munging works when separated from newline');
+$signature = $munged->sign($keyid, $passphrase, \@message);
+is(
+    $keyid,
+    $signer->verify($signature, "foo\n  bar\nbaz"),
+    'Munging works when separated from newline'
+);
 
 # Open and load a more comprehensive data file.
-open(my $fh, '<', "$data/message");
+open(my $fh, '<', 't/data/message');
 my @data = <$fh>;
 close($fh);
 
 # Create a version of the data with whitespace at the end of each line and
-# then generate a signature with munging enabled.
+# then generate a signature with munging enabled.  This signature should be
+# over the same content as @data, so should verify when given @data as the
+# message.
 my @whitespace = @data;
 for my $line (@whitespace) {
     $line =~ s{\n}{ \n}xms;
 }
-{
-    local $PGP::Sign::MUNGE = 1;
-    ($signature, $version) = pgp_sign($keyid, $passphrase, @whitespace);
-}
-isnt($signature, undef, 'Signature of munged data');
-is(pgp_error(), q{}, '...with no errors');
-
-# This signature should be over the same content as @data, so should verify
-# when given @data as the message.
-is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
-is(pgp_error(),                             q{},    '...with no errors');
+$signature = $munged->sign($keyid, $passphrase, @whitespace);
+is($keyid, $signer->verify($signature, @data), 'Longer data verifies');
 
 # This signature should also verify when mugning of the data is enabled.
-{
-    local $PGP::Sign::MUNGE = 1;
-    my $signer = pgp_verify($signature, $version, @whitespace);
-    is($signer, $keyid, 'Verifies with munging');
-}
-is(pgp_error(), q{}, '...with no errors');
+is($keyid, $munged->verify($signature, @whitespace), 'Verifies with munging');
 
 # If the data is not munged on verification, it will not match, since GnuPG
 # treats the trailing whitespace as significant.
-my $signer = pgp_verify($signature, $version, @whitespace);
-is($signer,     q{}, 'Fails to verifies without munging');
-is(pgp_error(), q{}, '...with no errors');
+is(q{}, $signer->verify($signature, @whitespace), 'Fails without munging');
