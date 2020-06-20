@@ -15,7 +15,7 @@ use warnings;
 
 use File::Spec;
 use IO::File;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 BEGIN { use_ok('PGP::Sign'); }
 
@@ -50,7 +50,8 @@ open($fh, '<', "$data/message.asc.v4");
 close($fh);
 $signature = join(q{}, @raw_signature[4 .. 6]);
 $signer = pgp_verify($signature, undef, IO::File->new("$data/message", 'r'));
-is(PGP::Sign::pgp_error(), q{}, '...with no errors');
+is($signer,                $expected, 'DSAv4 sig from IO::File');
+is(PGP::Sign::pgp_error(), q{},       '...with no errors');
 
 # Check an ancient PGP 2.x signature.
 open($fh, '<', "$data/message.sig");
