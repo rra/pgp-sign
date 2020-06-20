@@ -10,6 +10,12 @@ PGP::Sign 1.00 (unreleased)
     versions of Perl back to 5.003, which are now impossible to test with
     and are missing many modern Perl features.
 
+    Add support for GnuPG v2.  GnuPG v2 is chosen by setting
+    $PGP::Sign::PGPSTYLE to "GPG".  Be aware that GnuPG v2 does not
+    support creating signatures that can be verified with PGP 2.6.2.  The
+    default setting of $PGP::Sign::PGPSTYLE is "GPG1", which uses GnuPG v1
+    configured to be backward-compatible with PGP 2.6.2.
+
     Pass --allow-weak-digest-algos to pgp_sign and pgp_verify so that they
     can use old keys and verify signatures from old keys, such as those
     created with PGP 2.6.2.

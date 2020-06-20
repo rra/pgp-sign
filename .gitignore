@@ -13,3 +13,4 @@
 /t/data/gnupg1/pubring.gpg~
 /t/data/gnupg1/random_seed
 /t/data/gnupg1/trustdb.gpg
+/t/data/gnupg2/trustdb.gpg

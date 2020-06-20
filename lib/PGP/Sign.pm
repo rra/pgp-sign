@@ -59,10 +59,50 @@ our $PGPPATH;
 
 # What style of PGP invocation to use by default.  The only allowable value is
 # GPG.
-our $PGPSTYLE = 'GPG';
+our $PGPSTYLE = 'GPG1';
 
 # The directory in which temporary files should be created.
 our $TMPDIR;
+
+# The flags to use with the various PGP styles.
+my %SIGN_FLAGS = (
+    GPG => [
+        qw(
+          --detach-sign --armor
+          --quiet --textmode --batch --no-tty --pinentry-mode=loopback
+          --no-greeting --no-permission-warning
+          )
+    ],
+    GPG1 => [
+        qw(
+          --detach-sign --armor
+          --quiet --textmode --batch --no-tty --no-use-agent
+          --no-greeting --no-permission-warning
+          --force-v3-sigs --allow-weak-digest-algos
+          )
+    ],
+);
+my %VERIFY_FLAGS = (
+    GPG => [
+        qw(
+          --verify
+          --quiet --batch --no-tty
+          --no-greeting --no-permission-warning
+          --no-auto-key-retrieve --no-auto-check-trustdb
+          --allow-weak-digest-algos
+          --disable-dirmngr
+          )
+    ],
+    GPG1 => [
+        qw(
+          --verify
+          --quiet --batch --no-tty
+          --no-greeting --no-permission-warning
+          --no-auto-key-retrieve --no-auto-check-trustdb
+          --allow-weak-digest-algos
+          )
+    ],
+);
 
 ##############################################################################
 # Implementation
@@ -195,13 +235,12 @@ sub pgp_sign {
     local $SIG{PIPE} = 'IGNORE';
 
     # Figure out what command line we'll be using.
-    if ($PGPSTYLE ne 'GPG') {
+    if ($PGPSTYLE ne 'GPG' && $PGPSTYLE ne 'GPG1') {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
     my @command = (
-        $PGPS, '-u', $keyid, qw(
-          --detach-sign --armor --textmode --batch --force-v3-sigs
-          --allow-weak-digest-algos --passphrase-fd=3),
+        $PGPS, @{ $SIGN_FLAGS{$PGPSTYLE} },
+        '-u', $keyid, qw(--passphrase-fd 3),
     );
     if ($PGPPATH) {
         push(@command, '--homedir', $PGPPATH);
@@ -286,13 +325,15 @@ sub pgp_verify {
     close($datafh);
 
     # Figure out what command line we'll be using.
-    if ($PGPSTYLE ne 'GPG') {
+    if ($PGPSTYLE ne 'GPG' && $PGPSTYLE ne 'GPG1') {
         croak("Unknown \$PGPSTYLE setting $PGPSTYLE");
     }
+    #<<<
     my @command = (
-        $PGPV, '--batch', '--verify', '--quiet', '--status-fd=1',
-        '--allow-weak-digest-algos', '--logger-fd=1',
+        $PGPV, @{ $VERIFY_FLAGS{$PGPSTYLE} },
+        qw(--status-fd 1 --logger-fd 1),
     );
+    #>>>
     if ($PGPPATH) {
         push(@command, '--homedir', $PGPPATH);
     }
@@ -343,8 +384,8 @@ sub pgp_error {
 __DATA__
 
 =for stopwords
-Allbery DSS GNUPGHOME GPG Gierth Mitzelfelt OpenPGP PGPMoose PGPPATH TMPDIR
-canonicalized d'Itri egd keyrings pgpverify ps signcontrol
+Allbery DSS GNUPGHOME GPG GPG1 Gierth Mitzelfelt OpenPGP PGPMoose PGPPATH
+TMPDIR canonicalized d'Itri egd keyrings pgpverify ps signcontrol
 
 =head1 NAME
 
@@ -440,8 +481,8 @@ or F<$HOME/.gnupg>.  If you're using GnuPG and the Entropy Gathering Daemon
 
 =item $PGP::Sign::PGPSTYLE
 
-What style of command line arguments and responses to expect from PGP.  The
-only valid value for this variable is "GPG" for GnuPG behavior.
+What style of command line arguments and responses to expect from PGP.  Must
+be either "GPG" for GnuPG v2 or "GPG1" for GnuPG v1.  The default is "GPG1".
 
 =item $PGP::Sign::TMPDIR
 
