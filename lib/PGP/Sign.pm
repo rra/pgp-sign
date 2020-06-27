@@ -361,7 +361,7 @@ sub sign {
     return join("\n", @signature);
 }
 
-# Check a detatched signature for given data.
+# Check a detached signature for given data.
 #
 # $signature - The signature as an ASCII-armored string with embedded newlines
 # @sources   - The data over which to check the signature
@@ -478,7 +478,7 @@ sub pgp_sign {
     return wantarray ? ($signature, 'GnuPG') : $signature;
 }
 
-# Check a detatched signature for given data.
+# Check a detached signature for given data.
 #
 # $signature - The signature as an ASCII-armored string with embedded newlines
 # @sources   - The data over which to check the signature
