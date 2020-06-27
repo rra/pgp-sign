@@ -9,7 +9,7 @@
 #
 # SPDX-License-Identifier: GPL-1.0-or-later OR Artistic-1.0-Perl
 
-use 5.010;
+use 5.020;
 use autodie;
 use strict;
 use warnings;
@@ -29,7 +29,7 @@ my $build = Module::Build->new(
     configure_requires => { 'Module::Build' => 0.28 },
     requires           => {
         'IPC::Run' => 0,
-        'perl'     => '5.010',
+        'perl'     => '5.020',
     },
 );
 
