@@ -33,6 +33,10 @@
         "tarname": "PGP-Sign",
         "version": "pgp-sign",
         "cpan": "PGP-Sign",
+        "ignore": [
+            "^t/data/gnupg1/random_seed$",
+            "^t/data/gnupg./trustdb\\.gpg$",
+        ],
     },
     "packaging": {
         "debian": "libpgp-sign-perl",
