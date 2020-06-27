@@ -1,6 +1,6 @@
                       User-Visible PGP::Sign Changes
 
-PGP::Sign 1.00 (unreleased)
+PGP::Sign 1.00 (2020-06-27)
 
     Drop support for all PGP implementations other than GnuPG.  I haven't
     seen a working copy of the old commercial PGP implementations in years
