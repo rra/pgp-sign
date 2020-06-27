@@ -20,5 +20,5 @@ v1, supports using OpenPGP keys and generating and verifying signatures
 that are backward-compatible with PGP 2.6.2.
 
 PGP::Sign provides both a (recommended) object-oriented API and a (legacy)
-function-based API that uses global variables fo configuration and is
+function-based API that uses global variables for configuration and is
 backward-compatible with earlier versions of PGP::Sign.

@@ -26,7 +26,7 @@ Additions to this file are also welcome.
 
  * All of the information about a signature should be available, not just
    the key ID and whether or not it verified.  It's a little tempting to
-   make PGP::Sign return a queriable object here, but I'd rather stay away
+   make PGP::Sign return a queryable object here, but I'd rather stay away
    from the morass of turning this into OO....
 
  * The second argument to pgp_verify() is utterly pointless, since no PGP
