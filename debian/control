@@ -3,7 +3,15 @@ Section: perl
 Priority: optional
 Build-Depends:
  debhelper (>= 9),
+ gnupg,
  gnupg1,
+ libipc-run-perl,
+ libmodule-build-perl,
+ libtest-minimumversion-perl,
+ libtest-pod-coverage-perl,
+ libtest-pod-perl,
+ libtest-strict-perl,
+ libtest-synopsis-perl,
  perl,
 Maintainer: Russ Allbery <rra@debian.org>
 Standards-Version: 3.9.8
@@ -14,7 +22,8 @@ Vcs-Browser: https://git.eyrie.org/?p=perl/pgp-sign.git
 Package: libpgp-sign-perl
 Architecture: all
 Depends:
- gnupg1,
+ gnupg | gnupg1,
+ libipc-run-perl,
  ${misc:Depends},
  ${perl:Depends},
 Description: Perl module to create detached PGP signatures
