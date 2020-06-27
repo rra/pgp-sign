@@ -25,6 +25,11 @@ PGP::Sign 1.00 (unreleased)
     $PGP::Sign::PGPSTYLE to "GPG1", which uses GnuPG v1 configured to be
     backward-compatible with PGP 2.6.2.
 
+    Status output from GnuPG is now kept separate from human-readable log
+    and error output for more reliable parsing.  This will change the
+    order of GnuPG output in reported error messages.  The human-readable
+    output will always be first, followed by the status messages.
+
     Pass --allow-weak-digest-algos to GnuPG so it can use old keys and
     verify signatures from old keys, such as those created with PGP 2.6.2.
 
