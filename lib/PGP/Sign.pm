@@ -411,7 +411,7 @@ sub verify {
     # key ID.  This is a historical wart in the API; a future version will
     # hopefully add an option to return more accurate signer information.
     for my $line (split(m{\n}xms, $output)) {
-        if ($line =~ m{ \[GNUPG:\] \s+ GOODSIG \s+ \S+ \s+ (.*)}xms) {
+        if ($line =~ m{ ^ \[GNUPG:\] \s+ GOODSIG \s+ \S+ \s+ (.*) }xms) {
             return $1;
         } elsif ($line =~ m{ ^ \[GNUPG:\] \s+ BADSIG \s+ }xms) {
             return q{};
