@@ -21,8 +21,9 @@ my $build = Module::Build->new(
     module_name          => 'PGP::Sign',
     dist_author          => 'Russ Allbery <rra@cpan.org>',
     license              => 'perl',
-    add_to_cleanup       => [qw(t/data/random_seed t/data/trustdb.gpg)],
     recursive_test_files => 1,
+    add_to_cleanup =>
+      [qw(MANIFEST.bak cover_db t/data/random_seed t/data/trustdb.gpg)],
 
     # Other package relationships.
     configure_requires => { 'Module::Build' => 0.28 },
