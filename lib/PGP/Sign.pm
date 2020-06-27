@@ -270,8 +270,8 @@ sub _build_sign_command {
     return @command;
 }
 
-# Construct the command for verification.  This will send all status and
-# logging to standard output.
+# Construct the command for verification.  This will send all logging to
+# standard output and the status messages to file descriptor 3.
 #
 # $signature_file - Path to the file containing the signature
 # $data_file      - Path to the file containing the signed data
@@ -279,7 +279,7 @@ sub _build_sign_command {
 # Returns: List of the command and arguments.
 sub _build_verify_command {
     my ($self, $signature_file, $data_file) = @_;
-    my @command = ($self->{path}, qw(--status-fd 1 --logger-fd 1));
+    my @command = ($self->{path}, qw(--status-fd 3 --logger-fd 1));
     push(@command, @{ $VERIFY_FLAGS{ $self->{style} } });
     if ($self->{home}) {
         push(@command, '--homedir', $self->{home});
@@ -394,10 +394,9 @@ sub verify {
     my @command
       = $self->_build_verify_command($sigfh->filename, $datafh->filename);
 
-    # Call GnuPG to check the signature.  Because we've written everything out
-    # to a file, this is fairly simple; just grab stdout.
-    my $output;
-    run(\@command, '>&', \$output);
+    # Call GnuPG to check the signature.
+    my ($output, $results);
+    run(\@command, '>&', \$output, '3>', \$results);
     my $status = $?;
 
     # Check for the message that gives us the key status and return the
@@ -410,7 +409,7 @@ sub verify {
     # Note that this returns the human-readable key ID instead of the actual
     # key ID.  This is a historical wart in the API; a future version will
     # hopefully add an option to return more accurate signer information.
-    for my $line (split(m{\n}xms, $output)) {
+    for my $line (split(m{\n}xms, $results)) {
         if ($line =~ m{ ^ \[GNUPG:\] \s+ GOODSIG \s+ \S+ \s+ (.*) }xms) {
             return $1;
         } elsif ($line =~ m{ ^ \[GNUPG:\] \s+ BADSIG \s+ }xms) {
@@ -419,6 +418,7 @@ sub verify {
     }
 
     # Neither a good nor a bad signature seen.
+    $output .= $results;
     if ($status != 0) {
         $output .= "Execution of $command[0] failed with status $status";
     }
