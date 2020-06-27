@@ -1,3 +1,23 @@
+libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    - Drop support for all PGP implementations other than GnuPG.
+    - Add a new object-oriented API that avoids global variables.  The old
+      API is still supported, implemented as a shim over the new API.
+    - Add support for GnuPG v2.
+    - Separate status output from logging when running GnuPG.
+    - Pass --allow-weak-digest-algos with GnuPG v1 for better backwards
+      compatibility with PGP 2.6.2.
+    - pgp_sign in array context now always returns "GnuPG" as the PGP
+      version.
+    - pgp_verify now ignores the version parameter.
+    - Fix whitespace munging with pgp_sign when called again with new data
+      after finishing signing data with trailing whitespace without a
+      newline.
+    - Use IPC::Run and File::Temp instead of hand-rolled equivalents.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 16:46:19 -0700
+
 libpgp-sign-perl (0.20-4) unstable; urgency=medium
 
   * Upstream doesn't (yet) work with GnuPG v2, so pin the dependencies at
