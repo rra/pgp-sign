@@ -15,6 +15,11 @@ libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
       after finishing signing data with trailing whitespace without a
       newline.
     - Use IPC::Run and File::Temp instead of hand-rolled equivalents.
+  * Update standards version to 4.5.0.
+    - Install Changes as NEWS.gz instead of changelog.gz since it is now
+      release notes rather than a detailed changelog.
+    - Use https for the Format field of debian/copyright.
+    - Add Rules-Requires-Root: no.
 
  -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 16:46:19 -0700
 
