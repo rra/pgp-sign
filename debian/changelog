@@ -24,6 +24,7 @@ libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
     - Add Rules-Requires-Root: no.
   * Update to debhelper compatibility level V13.
     - Use a dependency on debhelper-compat instead of debian/compat.
+  * Refresh upstream signing key.
 
  -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 16:46:19 -0700
 
