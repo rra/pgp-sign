@@ -1,4 +1,4 @@
-libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
+libpgp-sign-perl (1.00-1) unstable; urgency=medium
 
   * New upstream release.
     - Drop support for all PGP implementations other than GnuPG.
@@ -26,7 +26,7 @@ libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
     - Use a dependency on debhelper-compat instead of debian/compat.
   * Refresh upstream signing key.
 
- -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 16:46:19 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 18:45:18 -0700
 
 libpgp-sign-perl (0.20-4) unstable; urgency=medium
 
