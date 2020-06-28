@@ -123,4 +123,3 @@ libpgp-sign-perl (0.18-1) unstable; urgency=low
   * Initial Release.
 
  -- Russ Allbery <rra@stanford.edu>  Wed,  4 Aug 2004 22:26:31 -0700
-
