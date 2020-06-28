@@ -22,6 +22,8 @@ libpgp-sign-perl (1.00-1) UNRELEASED; urgency=medium
       release notes rather than a detailed changelog.
     - Use https for the Format field of debian/copyright.
     - Add Rules-Requires-Root: no.
+  * Update to debhelper compatibility level V13.
+    - Use a dependency on debhelper-compat instead of debian/compat.
 
  -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2020 16:46:19 -0700
 
