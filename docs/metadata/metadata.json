@@ -28,6 +28,11 @@
             "workflow": "build",
         },
     },
+    "quote": {
+        "author": "William Shakespeare",
+        "work": "Hamlet",
+        "broken": true,
+    },
     "distribution": {
         "section": "perl",
         "tarname": "PGP-Sign",
