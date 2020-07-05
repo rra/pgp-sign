@@ -121,12 +121,12 @@ for my $style (@styles) {
     like(
         $errors[-1],
         qr{^ Execution [ ] of [ ] gpg.? [ ] failed}xms,
-        'Invalid signature'
+        'Invalid signature',
     );
     like(
         $errors,
         qr{\n Execution [ ] of [ ] gpg.? [ ] failed}xms,
-        'Errors contain newlines'
+        'Errors contain newlines',
     );
     is($errors, join(q{}, @errors), 'Two presentations of errors match');
 }

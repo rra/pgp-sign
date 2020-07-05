@@ -56,8 +56,8 @@ my $signer = PGP::Sign->new(
     {
         home  => File::Spec->catdir($data, 'gnupg1'),
         path  => $PATH,
-        style => 'GPG1'
-    }
+        style => 'GPG1',
+    },
 );
 
 # Check a valid signature.
@@ -69,7 +69,7 @@ is($keyid, $signer->verify($signature, @data), 'Signature verifies');
 is(
     q{},
     $signer->verify($signature, @data, 'xyzzy'),
-    'Signature does not verify with added nonsense'
+    'Signature does not verify with added nonsense',
 );
 
 # Avoid test warnings about using my obsolete address.  For better or worse,
@@ -101,5 +101,5 @@ $signature = join(q{}, @raw_signature[3 .. 6]);
 is(
     'R. Russell Allbery <eagle@windlord.stanford.edu>',
     $signer->verify($signature, \@data),
-    'PGP sig from array ref'
+    'PGP sig from array ref',
 );

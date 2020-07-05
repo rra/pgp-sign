@@ -89,6 +89,7 @@ The following additional Perl modules will be used by the test suite if
 present:
 
 * Devel::Cover
+* Perl::Critic::Freenode
 * Test::MinimumVersion
 * Test::Perl::Critic
 * Test::Pod

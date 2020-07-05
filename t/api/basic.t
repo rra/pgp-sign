@@ -60,7 +60,7 @@ my %nonsense = (foo => 'bar');
 is(
     q{},
     $signer->verify($signature, @data, \%nonsense),
-    'Signature does not verify with added hashref'
+    'Signature does not verify with added hashref',
 );
 
 # Test taking code from a code ref and then verifiying the signature.
@@ -78,7 +78,7 @@ my $scalar_data = join(q{}, @data);
 is(
     'testing',
     $signer->verify($signature, \$scalar_data),
-    'RSAv4 sig from scalar ref'
+    'RSAv4 sig from scalar ref',
 );
 
 # Check a version 3 RSA signature using a glob as the data source.

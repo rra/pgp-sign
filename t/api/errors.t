@@ -45,7 +45,7 @@ my $signer = eval { PGP::Sign->new({ style => 'foo' }) };
 like(
     $@,
     qr{^Unknown [ ] OpenPGP [ ] backend [ ] style [ ] foo}xms,
-    'Bad style argument'
+    'Bad style argument',
 );
 
 # A path to a nonexistent binary.

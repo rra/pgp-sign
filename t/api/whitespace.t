@@ -67,7 +67,7 @@ $signature = $munged->sign($keyid, $passphrase, \@message);
 is(
     $keyid,
     $signer->verify($signature, "foo\n  bar\nbaz"),
-    'Munging works when separated from newline'
+    'Munging works when separated from newline',
 );
 
 # Open and load a more comprehensive data file.
