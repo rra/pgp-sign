@@ -24,7 +24,7 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: Install dependencies
-        run: sudo cpanm --installdeps .
+        run: sudo cpanm --installdeps --with-suggests .
       - name: Build.PL
         run: perl Build.PL
       - name: make test
