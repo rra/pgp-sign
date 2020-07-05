@@ -13,19 +13,29 @@ use 5.020;
 use autodie;
 use warnings;
 
+use lib 't/lib';
+
 use File::Spec;
 use IO::File;
 use IPC::Cmd qw(can_run);
 use Test::More;
+use Test::PGP qw(gpg_is_gpg1);
+
+# Path to GnuPG v1.
+my $PATH;
 
 # Check that GnuPG is available.  If so, load the module and set the plan.
 BEGIN {
+    $PATH = 'gpg1';
     if (!can_run('gpg1')) {
-        plan skip_all => 'gpg1 binary not available';
-    } else {
-        plan tests => 7;
-        use_ok('PGP::Sign');
+        if (gpg_is_gpg1()) {
+            $PATH = 'gpg';
+        } else {
+            plan skip_all => 'gpg1 binary not available';
+        }
     }
+    plan tests => 7;
+    use_ok('PGP::Sign');
 }
 
 # Locate our test data directory for later use.
@@ -45,6 +55,7 @@ my $passphrase = 'testing';
 my $signer = PGP::Sign->new(
     {
         home  => File::Spec->catdir($data, 'gnupg1'),
+        path  => $PATH,
         style => 'GPG1'
     }
 );
