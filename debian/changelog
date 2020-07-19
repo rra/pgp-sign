@@ -1,6 +1,7 @@
 libpgp-sign-perl (1.01-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Mark the package as Multi-Arch: foreign.
 
  -- Russ Allbery <rra@debian.org>  Sat, 18 Jul 2020 19:39:20 -0700
 

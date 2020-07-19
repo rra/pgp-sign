@@ -27,6 +27,7 @@ Depends:
  libipc-run-perl,
  ${misc:Depends},
  ${perl:Depends},
+Multi-Arch: foreign
 Description: Perl module to create detached PGP signatures
  PGP::Sign creates and checks detached PGP signatures for textual data
  using GnuPG.  Other PGP implementations are also supported with run-time
