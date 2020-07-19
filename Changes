@@ -1,6 +1,6 @@
                       User-Visible PGP::Sign Changes
 
-PGP::Sign 1.01 (unreleased)
+PGP::Sign 1.01 (2020-07-18)
 
     Fix test suite to pass on systems where gpg is GnuPG v1.  This is
     apparently still common among many CPAN tester machines, and thus
