@@ -48,9 +48,10 @@ backward-compatible with earlier versions of PGP::Sign.
 ## Requirements
 
 Perl 5.20 or later and Module::Build are required to build this module,
-and IPC::Run is required to use it.  Either GnuPG v2 or GnuPG v1
-(selectable at runtime) is also required.  It has not been tested with
-versions of GnuPG older than 1.4.23.
+and IPC::Run is required to use it.  Either GnuPG v2 (version 2.1.12 or
+later) or GnuPG v1 is also required.  The implementation of GnuPG can be
+selected at runtime.  It has not been tested with versions of GnuPG older
+than 1.4.23.
 
 PGP::Sign uses IPC::Run features that are documented as not available on
 Windows (primarily higher-numbered file descriptors) and has never been
