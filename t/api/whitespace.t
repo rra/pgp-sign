@@ -40,8 +40,21 @@ my $passphrase = 'testing';
 my ($home, $signer, $munged);
 if (gpg_is_gpg1()) {
     $home   = File::Spec->catdir('t', 'data', 'gnupg1');
-    $signer = PGP::Sign->new({ home => $home, style => 'GPG1' });
-    $munged = PGP::Sign->new({ home => $home, munge => 1, style => 'GPG1' });
+    $signer = PGP::Sign->new(
+        {
+            home  => $home,
+            path  => 'gpg',
+            style => 'GPG1'
+        }
+    );
+    $munged = PGP::Sign->new(
+        {
+            home  => $home,
+            path  => 'gpg',
+            munge => 1,
+            style => 'GPG1'
+        }
+    );
 } else {
     $home   = File::Spec->catdir('t', 'data', 'gnupg2');
     $signer = PGP::Sign->new({ home => $home });

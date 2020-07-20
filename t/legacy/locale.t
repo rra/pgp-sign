@@ -43,6 +43,8 @@ my $data = 't/data';
 if (gpg_is_gpg1()) {
     $PGP::Sign::PGPSTYLE = 'GPG1';
     $PGP::Sign::PGPPATH  = File::Spec->catdir($data, 'gnupg1');
+    $PGP::Sign::PGPS     = 'gpg';
+    $PGP::Sign::PGPV     = 'gpg';
 } else {
     $PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg2');
 }
