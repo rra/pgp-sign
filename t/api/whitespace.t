@@ -44,16 +44,16 @@ if (gpg_is_gpg1()) {
         {
             home  => $home,
             path  => 'gpg',
-            style => 'GPG1'
-        }
+            style => 'GPG1',
+        },
     );
     $munged = PGP::Sign->new(
         {
             home  => $home,
             path  => 'gpg',
             munge => 1,
-            style => 'GPG1'
-        }
+            style => 'GPG1',
+        },
     );
 } else {
     $home   = File::Spec->catdir('t', 'data', 'gnupg2');
