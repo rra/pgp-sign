@@ -12,20 +12,39 @@ on:
 
 jobs:
   perl:
+    runs-on: ubuntu-latest
+
     env:
       AUTHOR_TESTING: 1
 
-    runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
+
       - name: Install prerequisites
         run: sudo apt-get install cpanminus gnupg gnupg1
+
+      - name: Get Perl version
+        id: get-perl
+        run: |
+          perl -e 'print "::set-output name=version::", $^V, "\n"'
+
+      - name: Cache Perl modules
+        uses: actions/cache@v2
+        with:
+          path: ~/perl5
+          key: ${{ runner.os }}-perl-${{ steps.get-perl.outputs.version }}-${{ hashFiles('cpanfile') }}
+          restore-keys: |
+            ${{ runner.os }}-perl-${{ steps.get-perl.outputs.version }}-
+
       - uses: perl-actions/install-with-cpanm@v1.2
         with:
+          args: "--local-lib=~/perl5 --with-suggests"
           cpanfile: "cpanfile"
-          args: "--with-suggests"
+          path: "/usr/bin/cpanm"
+          sudo: false
+
       - name: Build.PL
-        run: perl Build.PL
+        run: PERL5LIB=$HOME/perl5/lib/perl5 perl Build.PL
+
       - name: make test
-        run: ./Build test
+        run: PERL5LIB=$HOME/perl5/lib/perl5 PATH=$HOME/perl5/bin:$PATH ./Build test
