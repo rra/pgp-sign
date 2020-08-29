@@ -1,3 +1,9 @@
+libpgp-sign-perl (1.02-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 29 Aug 2020 14:15:18 -0700
+
 libpgp-sign-perl (1.01-1) unstable; urgency=medium
 
   * New upstream release.
