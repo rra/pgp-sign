@@ -1,4 +1,4 @@
-# PGP::Sign 1.01
+# PGP::Sign 1.02
 
 [![Build
 status](https://github.com/rra/pgp-sign/workflows/build/badge.svg)](https://github.com/rra/pgp-sign/actions)
