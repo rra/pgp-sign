@@ -1,6 +1,6 @@
                       User-Visible PGP::Sign Changes
 
-PGP::Sign 1.02 (unreleased)
+PGP::Sign 1.02 (2020-08-29)
 
     On systems where gpg is GnuPG v1, override the path to the gpg binary
     in the test suite.  Some tests were still incorrectly looking for a
