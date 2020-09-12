@@ -1,0 +1,5 @@
+Bug-Database: https://rt.cpan.org/Dist/Display.html?Name=PGP-Sign
+Documentation: https://www.eyrie.org/~eagle/software/pgp-sign/
+Repository: https://github.com/rra/pgp-sign.git
+Repository-Browse: https://github.com/rra/pgp-sign
+Security-Contact: rra@cpan.org
