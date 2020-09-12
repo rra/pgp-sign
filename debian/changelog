@@ -1,11 +1,11 @@
-libpgp-sign-perl (1.03-1) UNRELEASED; urgency=medium
+libpgp-sign-perl (1.03-1) unstable; urgency=medium
 
   * New upstream release.
   * Move the canonical packaging repository to Salsa.
   * Use debian/unstable as the default packaging branch.
   * Add an upstream metadata file.
 
- -- Russ Allbery <rra@debian.org>  Sat, 12 Sep 2020 14:23:08 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 12 Sep 2020 15:10:21 -0700
 
 libpgp-sign-perl (1.02-1) unstable; urgency=medium
 
