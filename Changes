@@ -1,6 +1,6 @@
                       User-Visible PGP::Sign Changes
 
-PGP::Sign 1.03 (unreleased)
+PGP::Sign 1.03 (2020-09-12)
 
     Document that GnuPG 2.1.23 or GnuPG 1.4.20 or later is required and
     skip tests on platforms that do not meet those version requirements.
