@@ -18,8 +18,8 @@ Testsuite: autopkgtest-pkg-perl
 Maintainer: Russ Allbery <rra@debian.org>
 Standards-Version: 4.5.0
 Homepage: https://www.eyrie.org/~eagle/software/pgp-sign/
-Vcs-Git: https://git.eyrie.org/git/perl/pgp-sign.git -b debian/master
-Vcs-Browser: https://git.eyrie.org/?p=perl/pgp-sign.git
+Vcs-Git: https://salsa.debian.org/rra/libpgp-sign-perl
+Vcs-Browser: https://salsa.debian.org/rra/libpgp-sign-perl
 
 Package: libpgp-sign-perl
 Architecture: all
