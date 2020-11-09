@@ -45,7 +45,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-perl-${{ steps.get-perl.outputs.version }}-
 
-      - uses: perl-actions/install-with-cpanm@v1.2
+      - uses: perl-actions/install-with-cpanm@v1.3
         with:
           args: "--local-lib=~/perl5 --with-suggests --notest"
           cpanfile: "cpanfile"
