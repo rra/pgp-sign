@@ -1,6 +1,6 @@
                       User-Visible PGP::Sign Changes
 
-PGP::Sign 1.04 (unreleased)
+PGP::Sign 1.04 (2020-11-14)
 
     PGP::Sign 1.00 and later failed to sign input that's larger than can
     be held by the operating system pipe buffer because IPC::Run set the
