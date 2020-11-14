@@ -3,6 +3,7 @@ libpgp-sign-perl (1.04-1) unstable; urgency=medium
   * New upstream release.
     - Fix regression since 1.00 that caused signing of large inputs to
       fail because GnuPG blocked waiting for further input from PGP::Sign.
+  * Update debian/watch format to version 4.
 
  -- Russ Allbery <rra@debian.org>  Sat, 14 Nov 2020 15:54:42 -0800
 
