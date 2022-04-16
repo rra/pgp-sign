@@ -97,6 +97,7 @@ present:
 
 * Devel::Cover
 * Perl::Critic::Community
+* Test::CPAN::Changes (part of CPAN-Changes)
 * Test::MinimumVersion
 * Test::Perl::Critic
 * Test::Pod

@@ -9,6 +9,7 @@ requires 'IPC::Run';
 on 'test' => sub {
     suggests 'Devel::Cover';
     suggests 'Perl::Critic::Community';
+    suggests 'Test::CPAN::Changes';
     suggests 'Test::MinimumVersion';
     suggests 'Test::Perl::Critic';
     suggests 'Test::Pod';
