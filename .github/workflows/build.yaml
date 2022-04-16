@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install prerequisites
-        run: sudo apt-get install cpanminus gnupg gnupg1 hunspell
+        run: sudo apt-get install cpanminus gnupg gnupg1 aspell
 
       - name: Get Perl version
         id: get-perl
