@@ -1,10 +1,10 @@
-                              PGP::Sign 1.03
+                              PGP::Sign 1.04
                (create and verify detached PGP signatures)
                 Maintained by Russ Allbery <rra@cpan.org>
 
-  Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>.
-  This software is distributed under the same terms as Perl itself.
-  Please see the section LICENSE below for more information.
+  Copyright 1997-2000, 2002, 2004, 2018, 2020, 2022 Russ Allbery
+  <rra@cpan.org>.  This software is distributed under the same terms as
+  Perl itself.  Please see the section LICENSE below for more information.
 
 BLURB
 
@@ -84,7 +84,7 @@ TESTING
   present:
 
   * Devel::Cover
-  * Perl::Critic::Freenode
+  * Perl::Critic::Community
   * Test::MinimumVersion
   * Test::Perl::Critic
   * Test::Pod
@@ -112,9 +112,9 @@ SUPPORT
   will always have the current version of this package, the current
   documentation, and pointers to any additional resources.
 
-  For bug tracking, use the CPAN bug tracker at:
+  For bug tracking, use the issue tracker on GitHub:
 
-      https://rt.cpan.org/Dist/Display.html?Name=PGP-Sign
+      https://github.com/rra/pgp-sign/issues
 
   However, please be aware that I tend to be extremely busy and work
   projects often take priority.  I'll save your report and get to it as
@@ -137,16 +137,14 @@ SOURCE REPOSITORY
 
   The eyrie.org repository is the canonical one, maintained by the author,
   but using GitHub is probably more convenient for most purposes.  Pull
-  requests are gratefully reviewed and normally accepted.  It's probably
-  better to use the CPAN bug tracker than GitHub issues, though, to keep
-  all Perl module issues in the same place.
+  requests are gratefully reviewed and normally accepted.
 
 LICENSE
 
   The PGP::Sign package as a whole is covered by the following copyright
   statement and license:
 
-    Copyright 1997-2000, 2002, 2004, 2018, 2020
+    Copyright 1997-2000, 2002, 2004, 2018, 2020, 2022
         Russ Allbery <rra@cpan.org>
 
     This program is free software; you may redistribute it and/or modify

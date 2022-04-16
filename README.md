@@ -1,4 +1,4 @@
-# PGP::Sign 1.03
+# PGP::Sign
 
 [![Build
 status](https://github.com/rra/pgp-sign/workflows/build/badge.svg)](https://github.com/rra/pgp-sign/actions)
@@ -8,9 +8,10 @@ version](https://img.shields.io/cpan/v/PGP-Sign)](https://metacpan.org/release/P
 [![Debian
 package](https://img.shields.io/debian/v/libpgp-sign-perl/unstable)](https://tracker.debian.org/pkg/libpgp-sign-perl)
 
-Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>.
-This software is distributed under the same terms as Perl itself.  Please
-see the section [License](#license) below for more information.
+Copyright 1997-2000, 2002, 2004, 2018, 2020, 2022 Russ Allbery
+<rra@cpan.org>.  This software is distributed under the same terms as Perl
+itself.  Please see the section [License](#license) below for more
+information.
 
 ## Blurb
 
@@ -95,7 +96,7 @@ The following additional Perl modules will be used by the test suite if
 present:
 
 * Devel::Cover
-* Perl::Critic::Freenode
+* Perl::Critic::Community
 * Test::MinimumVersion
 * Test::Perl::Critic
 * Test::Pod
@@ -120,11 +121,11 @@ The [PGP::Sign web page](https://www.eyrie.org/~eagle/software/pgp-sign/)
 will always have the current version of this package, the current
 documentation, and pointers to any additional resources.
 
-For bug tracking, use the [CPAN bug
-tracker](https://rt.cpan.org/Dist/Display.html?Name=PGP-Sign).  However,
-please be aware that I tend to be extremely busy and work projects often
-take priority.  I'll save your report and get to it as soon as I can, but
-it may take me a couple of months.
+For bug tracking, use the [issue tracker on
+GitHub](https://github.com/rra/pgp-sign/issues).  However, please be aware
+that I tend to be extremely busy and work projects often take priority.
+I'll save your report and get to it as soon as I can, but it may take me a
+couple of months.
 
 ## Source Repository
 
@@ -138,16 +139,14 @@ web](https://git.eyrie.org/?p=perl/pgp-sign.git).
 
 The eyrie.org repository is the canonical one, maintained by the author,
 but using GitHub is probably more convenient for most purposes.  Pull
-requests are gratefully reviewed and normally accepted.  It's probably
-better to use the CPAN bug tracker than GitHub issues, though, to keep all
-Perl module issues in the same place.
+requests are gratefully reviewed and normally accepted.
 
 ## License
 
 The PGP::Sign package as a whole is covered by the following copyright
 statement and license:
 
-> Copyright 1997-2000, 2002, 2004, 2018, 2020
+> Copyright 1997-2000, 2002, 2004, 2018, 2020, 2022
 >     Russ Allbery <rra@cpan.org>
 >
 > This program is free software; you may redistribute it and/or modify it
