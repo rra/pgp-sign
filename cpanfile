@@ -8,7 +8,7 @@ requires 'IPC::Run';
 
 on 'test' => sub {
     suggests 'Devel::Cover';
-    suggests 'Perl::Critic::Freenode';
+    suggests 'Perl::Critic::Community';
     suggests 'Test::MinimumVersion';
     suggests 'Test::Perl::Critic';
     suggests 'Test::Pod';
