@@ -31,8 +31,7 @@ my $build = Module::Build->new(
         'meta-spec' => { version => '2' },
         resources   => {
             bugtracker => {
-                mailto => 'bug-PGP-Sign@rt.cpan.org',
-                web => 'https://rt.cpan.org/Dist/Display.html?Name=PGP-Sign',
+                web => 'https://github.com/rra/pgp-sign/issues',
             },
             homepage   => 'https://www.eyrie.org/~eagle/software/pgp-sign',
             repository => {
