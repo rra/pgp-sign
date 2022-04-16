@@ -33,7 +33,7 @@ BEGIN {
 }
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Create the object to use for testing.
@@ -42,8 +42,8 @@ if (gpg_is_gpg1()) {
     my $home = File::Spec->catdir('t', 'data', 'gnupg1');
     $signer = PGP::Sign->new(
         {
-            home  => $home,
-            path  => 'gpg',
+            home => $home,
+            path => 'gpg',
             style => 'GPG1',
         },
     );

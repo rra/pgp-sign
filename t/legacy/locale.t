@@ -44,9 +44,9 @@ local $ENV{LC_ALL} = 'fr_FR';
 my $data = 't/data';
 if (gpg_is_gpg1()) {
     $PGP::Sign::PGPSTYLE = 'GPG1';
-    $PGP::Sign::PGPPATH  = File::Spec->catdir($data, 'gnupg1');
-    $PGP::Sign::PGPS     = 'gpg';
-    $PGP::Sign::PGPV     = 'gpg';
+    $PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg1');
+    $PGP::Sign::PGPS = 'gpg';
+    $PGP::Sign::PGPV = 'gpg';
 } else {
     $PGP::Sign::PGPPATH = File::Spec->catdir($data, 'gnupg2');
 }
@@ -58,7 +58,7 @@ my @data = <$fh>;
 close($fh);
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Generate a signature and then verify it.
@@ -68,4 +68,4 @@ is(pgp_error(), q{}, '...with no errors');
 
 # Check signature.
 is(pgp_verify($signature, $version, @data), $keyid, 'Verify');
-is(pgp_error(),                             q{},    '...with no errors');
+is(pgp_error(), q{}, '...with no errors');

@@ -35,7 +35,7 @@ use Scalar::Util qw(blessed);
 
 # Export pgp_sign and pgp_verify by default for backwards compatibility.
 ## no critic (Modules::ProhibitAutomaticExportation)
-our @EXPORT    = qw(pgp_sign pgp_verify);
+our @EXPORT = qw(pgp_sign pgp_verify);
 our @EXPORT_OK = qw(pgp_error);
 ## use critic
 
@@ -43,39 +43,39 @@ our @EXPORT_OK = qw(pgp_error);
 my %SIGN_FLAGS = (
     GPG => [
         qw(
-          --detach-sign --armor
-          --quiet --textmode --batch --no-tty --pinentry-mode=loopback
-          --no-greeting --no-permission-warning
-          ),
+            --detach-sign --armor
+            --quiet --textmode --batch --no-tty --pinentry-mode=loopback
+            --no-greeting --no-permission-warning
+        ),
     ],
     GPG1 => [
         qw(
-          --detach-sign --armor
-          --quiet --textmode --batch --no-tty --no-use-agent
-          --no-greeting --no-permission-warning
-          --force-v3-sigs --allow-weak-digest-algos
-          ),
+            --detach-sign --armor
+            --quiet --textmode --batch --no-tty --no-use-agent
+            --no-greeting --no-permission-warning
+            --force-v3-sigs --allow-weak-digest-algos
+        ),
     ],
 );
 my %VERIFY_FLAGS = (
     GPG => [
         qw(
-          --verify
-          --quiet --batch --no-tty
-          --no-greeting --no-permission-warning
-          --no-auto-key-retrieve --no-auto-check-trustdb
-          --allow-weak-digest-algos
-          --disable-dirmngr
-          ),
+            --verify
+            --quiet --batch --no-tty
+            --no-greeting --no-permission-warning
+            --no-auto-key-retrieve --no-auto-check-trustdb
+            --allow-weak-digest-algos
+            --disable-dirmngr
+        ),
     ],
     GPG1 => [
         qw(
-          --verify
-          --quiet --batch --no-tty
-          --no-greeting --no-permission-warning
-          --no-auto-key-retrieve --no-auto-check-trustdb
-          --allow-weak-digest-algos
-          ),
+            --verify
+            --quiet --batch --no-tty
+            --no-greeting --no-permission-warning
+            --no-auto-key-retrieve --no-auto-check-trustdb
+            --allow-weak-digest-algos
+        ),
     ],
 );
 
@@ -145,7 +145,7 @@ sub _write_nonblocking {
     my $win = q{};
     vec($win, fileno($fh), 1) = 1;
     my $length = length($data);
-    my $total  = 0;
+    my $total = 0;
     while ($total < $length) {
         no autodie qw(syswrite);
         select(undef, my $wout = $win, undef, undef)
@@ -189,6 +189,7 @@ sub new {
     my $path = $args_ref->{path} // lc($style);
 
     # Create and return the object.
+    #<<<
     my $self = {
         home   => $args_ref->{home},
         munge  => $args_ref->{munge},
@@ -196,6 +197,7 @@ sub new {
         style  => $style,
         tmpdir => $args_ref->{tmpdir},
     };
+    #>>>
     bless($self, $class);
     return $self;
 }
@@ -338,7 +340,7 @@ sub sign {
     # Fork off a pgp process that we're going to be feeding data to, and tell
     # it to just generate a signature using the given key id and pass phrase.
     my $writefh = IO::Handle->new();
-    my $passfh  = IO::Handle->new();
+    my $passfh = IO::Handle->new();
     my ($signature, $errors);
     #<<<
     my $h = start(
@@ -419,7 +421,7 @@ sub verify {
     # doesn't appear to be a way to feed both the data and the signature in on
     # file descriptors.
     my @tmpdir = defined($self->{tmpdir}) ? (DIR => $self->{tmpdir}) : ();
-    my $sigfh  = File::Temp->new(@tmpdir, SUFFIX => '.asc');
+    my $sigfh = File::Temp->new(@tmpdir, SUFFIX => '.asc');
     _print_fh($sigfh, "-----BEGIN PGP SIGNATURE-----\n");
     _print_fh($sigfh, "\n", $signature);
     _print_fh($sigfh, "\n-----END PGP SIGNATURE-----\n");
@@ -495,6 +497,7 @@ sub pgp_sign {
     @ERROR = ();
 
     # Create the signer object.
+    #<<<
     my $signer = PGP::Sign->new(
         {
             home   => $PGPPATH,
@@ -504,6 +507,7 @@ sub pgp_sign {
             tmpdir => $TMPDIR,
         },
     );
+    #>>>
 
     # Do the work, capturing any errors.
     my $signature = eval { $signer->sign($keyid, $passphrase, @sources) };
@@ -513,7 +517,7 @@ sub pgp_sign {
     }
 
     # Return the results, including a dummy version if desired.
-    ## no critic (Freenode::Wantarray)
+    ## no critic (Wantarray)
     return wantarray ? ($signature, 'GnuPG') : $signature;
     ## use critic
 }
@@ -531,6 +535,7 @@ sub pgp_verify {
     @ERROR = ();
 
     # Create the verifier object.
+    #<<<
     my $verifier = PGP::Sign->new(
         {
             home   => $PGPPATH,
@@ -540,6 +545,7 @@ sub pgp_verify {
             tmpdir => $TMPDIR,
         },
     );
+    #>>>
 
     # Do the work, capturing any errors.
     my $signer = eval { $verifier->verify($signature, @sources) };
@@ -559,7 +565,7 @@ sub pgp_verify {
 #
 # Returns: A list of GnuPG output and error messages in list context
 #          The block of GnuPG output and error message in scalar context
-## no critic (Freenode::Wantarray)
+## no critic (Wantarray)
 sub pgp_error {
     my @error_lines = map { "$_\n" } @ERROR;
     return wantarray ? @error_lines : join(q{}, @error_lines);
@@ -912,7 +918,7 @@ Russ Allbery <rra@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 1997-2000, 2002, 2004, 2018, 2020 Russ Allbery <rra@cpan.org>
+Copyright 1997-2000, 2002, 2004, 2018, 2020, 2022 Russ Allbery <rra@cpan.org>
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -51,14 +51,14 @@ my @data = <$fh>;
 close($fh);
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Build the signer object with default parameters.
 my $signer = PGP::Sign->new(
     {
-        home  => File::Spec->catdir($data, 'gnupg1'),
-        path  => $PATH,
+        home => File::Spec->catdir($data, 'gnupg1'),
+        path => $PATH,
         style => 'GPG1',
     },
 );

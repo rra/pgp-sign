@@ -34,31 +34,31 @@ BEGIN {
 }
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Create the objects to use for tests, one without munging enabled and one
 # with.
 my ($home, $signer, $munged);
 if (gpg_is_gpg1()) {
-    $home   = File::Spec->catdir('t', 'data', 'gnupg1');
+    $home = File::Spec->catdir('t', 'data', 'gnupg1');
     $signer = PGP::Sign->new(
         {
-            home  => $home,
-            path  => 'gpg',
+            home => $home,
+            path => 'gpg',
             style => 'GPG1',
         },
     );
     $munged = PGP::Sign->new(
         {
-            home  => $home,
-            path  => 'gpg',
+            home => $home,
+            path => 'gpg',
             munge => 1,
             style => 'GPG1',
         },
     );
 } else {
-    $home   = File::Spec->catdir('t', 'data', 'gnupg2');
+    $home = File::Spec->catdir('t', 'data', 'gnupg2');
     $signer = PGP::Sign->new({ home => $home });
     $munged = PGP::Sign->new({ home => $home, munge => 1 });
 }
@@ -70,10 +70,10 @@ is($keyid, $signer->verify($signature, q{       }), 'Pure whitespace');
 # Do the same with whitespace munging enabled, and verify that it matches the
 # signature of the empty string.
 $signature = $munged->sign($keyid, $passphrase, q{       });
-is(q{},    $signer->verify($signature, q{       }), 'Munged does not match');
-is($keyid, $signer->verify($signature, q{}),        '...but does match empty');
+is(q{}, $signer->verify($signature, q{       }), 'Munged does not match');
+is($keyid, $signer->verify($signature, q{}), '...but does match empty');
 is($keyid, $munged->verify($signature, q{       }), '...and munge matches');
-is($keyid, $munged->verify($signature, q{}),        '...either one');
+is($keyid, $munged->verify($signature, q{}), '...either one');
 
 # Put the newline in the next chunk of data and confirm that it is still
 # munged correctly.

@@ -45,7 +45,7 @@ my @data = <$fh>;
 close($fh);
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # Build the signer object with default parameters.
@@ -67,7 +67,7 @@ is(
 
 # Test taking code from a code ref and then verifiying the signature.
 my @code_input = @data;
-my $data_ref   = sub { return shift(@code_input) };
+my $data_ref = sub { return shift(@code_input) };
 $signature = $signer->sign($keyid, $passphrase, $data_ref);
 is($keyid, $signer->verify($signature, @data), 'Signature from code ref');
 

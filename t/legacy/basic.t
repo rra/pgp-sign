@@ -42,7 +42,7 @@ my @data = <$fh>;
 close($fh);
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # There are three possibilities: gpg is GnuPG v1, gpg is GnuPG v2 and v1 is
@@ -77,43 +77,51 @@ for my $style (@styles) {
 
     # Check signature.
     is(pgp_verify($signature, $version, @data), $keyid, 'Verify');
-    is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
+    is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
     # The same without version, which shouldn't matter.
     is(pgp_verify($signature, undef, @data), $keyid, 'Verify without version');
-    is(PGP::Sign::pgp_error(),               q{},    '...with no errors');
+    is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
     # Check a failed signature by appending some nonsense to the data.
-    is(pgp_verify($signature, $version, @data, 'xyzzy'), q{},
-        'Verify invalid');
+    is(
+        pgp_verify($signature, $version, @data, 'xyzzy'), q{},
+        'Verify invalid',
+    );
     is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
     # Test taking code from a code ref and then verifying the reulting
     # signature.  Also test accepting only one return value from pgp_sign().
     my @code_input = @data;
-    my $data_ref   = sub {
+    my $data_ref = sub {
         my $line = shift(@code_input);
         return $line;
     };
     $signature = pgp_sign($keyid, $passphrase, $data_ref);
     isnt($signature, undef, 'Signature from code ref');
-    is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
+    is(PGP::Sign::pgp_error(), q{}, '...with no errors');
     is(pgp_verify($signature, $version, @data), $keyid, 'Verifies');
-    is(PGP::Sign::pgp_error(),                  q{},    '...with no errors');
+    is(PGP::Sign::pgp_error(), q{}, '...with no errors');
 
     # Test whitespace munging.
     {
         local $PGP::Sign::MUNGE = 1;
         ($signature, $version) = pgp_sign($keyid, $passphrase, q{       });
     }
-    is(pgp_verify($signature, $version, q{       }),
-        q{}, 'Munged does not match');
-    is(pgp_verify($signature, $version, q{}),
-        $keyid, '...but does match empty');
+    is(
+        pgp_verify($signature, $version, q{       }),
+        q{}, 'Munged does not match',
+    );
+    is(
+        pgp_verify($signature, $version, q{}),
+        $keyid, '...but does match empty',
+    );
     {
         local $PGP::Sign::MUNGE = 1;
-        is(pgp_verify($signature, $version, q{  }),
-            $keyid, '...and does match munged');
+        is(
+            pgp_verify($signature, $version, q{  }),
+            $keyid, '...and does match munged',
+        );
     }
 
     # Test error handling.

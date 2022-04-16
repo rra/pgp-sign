@@ -41,7 +41,7 @@ my @data = <$fh>;
 close($fh);
 
 # The key ID and pass phrase to use for testing.
-my $keyid      = 'testing';
+my $keyid = 'testing';
 my $passphrase = 'testing';
 
 # First, a bad style argument to the constructor.
